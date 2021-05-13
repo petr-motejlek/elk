@@ -1,3 +1,10 @@
+provider "docker" {
+  registry_auth {
+    address  = "registry.registry.cls.local"
+    username = " "
+    password = " "
+  }
+}
 provider "helm" {
   kubernetes {
     config_path = module.k8s.kubeconfig_path
@@ -54,6 +61,14 @@ module "registry" {
   ca_private_key_pem = module.ca.private_key_pem
   ca_private_key_algorithm = module.ca.private_key_algorithm
   ca_public_key_pem = module.ca.public_key_pem
+
+  storage_class = module.longhorn.storage_class
+}
+
+module "elk" {
+  depends_on = [
+  module.registry]
+  source = "./elk"
 
   storage_class = module.longhorn.storage_class
 }

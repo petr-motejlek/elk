@@ -1,0 +1,6 @@
+node.name: ${NODE__NAME}
+network.host: ${NETWORK__HOST}
+discovery.seed_hosts: ${DISCOVERY__SEED_HOSTS}
+cluster.initial_master_nodes: ${CLUSTER__INITIAL_MASTER_NODES}
+path.data: /var/lib/elasticsearch
+path.logs: /var/log/elasticsearch
