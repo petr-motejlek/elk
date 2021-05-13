@@ -17,9 +17,15 @@ apt-add-repository "deb [arch=amd64] https://apt.kubernetes.io/ kubernetes-xenia
 curl -fsSL https://baltocdn.com/helm/signing.asc | apt-key add -
 apt-add-repository "deb https://baltocdn.com/helm/stable/debian/ all main"
 
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg | apt-key add -
+apt-add-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
+
 apt-get update
 apt-get install -y --no-install-recommends \
   build-essential \
+  containerd.io \
+  docker-ce \
+  docker-ce-cli \
   git \
   helm \
   kubectl \
@@ -29,6 +35,9 @@ apt-get install -y --no-install-recommends \
   terraform \
   vagrant \
   virtualbox-6.1
+
+usermod -a -G docker vagrant
+systemctl enable --now docker
 
 curl -fsSL 'https://github.com/coredns/coredns/releases/download/v1.8.3/coredns_1.8.3_linux_amd64.tgz' | sudo tar -zxv -C /usr/bin/
 useradd -s /bin/false -m -d /var/lib/coredns coredns
