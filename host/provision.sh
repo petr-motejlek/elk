@@ -14,10 +14,14 @@ apt-add-repository "deb [arch=amd64] https://download.virtualbox.org/virtualbox/
 curl -fsSL https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key add -
 apt-add-repository "deb [arch=amd64] https://apt.kubernetes.io/ kubernetes-xenial main"
 
+curl -fsSL https://baltocdn.com/helm/signing.asc | apt-key add -
+apt-add-repository "deb https://baltocdn.com/helm/stable/debian/ all main"
+
 apt-get update
 apt-get install -y --no-install-recommends \
   build-essential \
   git \
+  helm \
   kubectl \
   "linux-headers-$( uname -r )" \
   ntp \
