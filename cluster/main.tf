@@ -38,3 +38,9 @@ module "exdns" {
   module.metallb]
   source = "./exdns"
 }
+
+module "longhorn" {
+  depends_on = [
+  module.metallb]
+  source = "./longhorn"
+}

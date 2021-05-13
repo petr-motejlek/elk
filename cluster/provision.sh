@@ -4,6 +4,9 @@ set -xeuo pipefail
 
 export DEBIAN_FRONTEND=noninteractive
 
+echo "vm.max_map_count=262144" >> /etc/sysctl.conf
+sysctl -p
+
 apt-get update
 apt-get install -y --no-install-recommends \
   apt-transport-https \
@@ -11,7 +14,9 @@ apt-get install -y --no-install-recommends \
   curl \
   gnupg \
   lsb-release \
-  ntp
+  nfs-common \
+  ntp \
+  open-iscsi
 
 curl -fsSL 'https://github.com/coredns/coredns/releases/download/v1.8.3/coredns_1.8.3_linux_amd64.tgz' | sudo tar -zxv -C /usr/bin/
 useradd -s /bin/false -m -d /var/lib/coredns coredns
@@ -39,6 +44,8 @@ systemctl enable --now coredns
 
 cp /home/vagrant/ca.pem /usr/local/share/ca-certificates/ca.crt
 update-ca-certificates
+
+echo "InitiatorName=$(/sbin/iscsi-iname)" > /etc/iscsi/initiatorname.iscsi
 
 curl -fsSL https://download.docker.com/linux/ubuntu/gpg | apt-key add -
 apt-add-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" 
