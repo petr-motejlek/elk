@@ -3,5 +3,7 @@
 .terraform.lock.hcl
 *.backup
 *.tfstate
+*.rkestate
 *~
+kubeconfig.yaml
 ca.pem
