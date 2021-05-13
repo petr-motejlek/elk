@@ -4,3 +4,4 @@
 *.backup
 *.tfstate
 *~
+ca.pem

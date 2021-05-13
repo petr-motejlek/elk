@@ -1,0 +1,3 @@
+module "ca" {
+  source = "./ca"
+}
