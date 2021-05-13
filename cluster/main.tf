@@ -32,3 +32,9 @@ module "metallb" {
   module.k8s]
   source = "./metallb"
 }
+
+module "exdns" {
+  depends_on = [
+  module.metallb]
+  source = "./exdns"
+}
