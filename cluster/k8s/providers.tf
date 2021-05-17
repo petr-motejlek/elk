@@ -21,6 +21,11 @@ terraform {
       version = "1.2.2"
     }
 
+    shell = {
+      source  = "scottwinkler/shell"
+      version = "1.7.7"
+    }
+
     vagrant = {
       source  = "bmatcuk/vagrant"
       version = "~> 4.0.0"
