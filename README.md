@@ -161,9 +161,10 @@ running anywhere to hold the state of the inventory.
 
 ## More k8s nodes
 
-It is possible to edit the `cluster/Vagrantfile` and increase the number of nodes that the k8s cluster
-will use. (In such case, I would also suggest increasing the number of replicas in `longhorn/main.tf` to 2 or 3).
-In case one has a machine powerful enough to sustain them, feel free to use it. I had
+It is possible to edit the `cluster/k8s/main.tf` and increase the number of nodes that the k8s cluster
+will use (local variable `nodes`). (In such case, I would also suggest increasing the number of replicas
+in `cluster/longhorn/main.tf` to 2 or 3 and probably also the number of CPUs and RAM in `host/Vagrantfile`).
+In case one has a machine powerful enough to sustain more nodes, feel free to use it. I had
 a lot of trouble to get to these specific resource limitations in order to get one node running. 
 Multiple nodes were not working properly due to CPU exhaustion on my laptop.
 
@@ -192,7 +193,7 @@ dependencies indirect by using some output of the previous steps/modules/resourc
 using depends_on felt like a more straightforward way of making it explicit what needs to happen
 when. I also only used it with `module`s (very high level).
 
-# Can I interact with K8s?
+## Can I interact with K8s?
 
 Yes, you can. On the "host" machine, under `cluster`, there is `kubeconfig.yaml` created
 when the cluster is up, and you can feed it into `kubectl` as `kubectl --kubeconfig kubeconfig.yaml`

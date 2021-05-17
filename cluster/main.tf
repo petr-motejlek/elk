@@ -27,40 +27,42 @@ module "ca" {
 
 module "k8s" {
   depends_on = [
-    module.ca]
+  module.ca]
   source = "./k8s"
 
-  dockerio_user = var.dockerio_user
-  dockerio_token = var.dockerio_token
+  dockerio_user      = var.dockerio_user
+  dockerio_token     = var.dockerio_token
+  ca_public_key_hash = module.ca.public_key_hash
+  ca_public_key_path = module.ca.public_key_path
 }
 
 module "metallb" {
   depends_on = [
-    module.k8s]
+  module.k8s]
   source = "./metallb"
 }
 
 module "exdns" {
   depends_on = [
-    module.metallb]
+  module.metallb]
   source = "./exdns"
 }
 
 module "longhorn" {
   depends_on = [
-    module.metallb]
+  module.metallb]
   source = "./longhorn"
 }
 
 module "registry" {
   depends_on = [
     module.longhorn,
-    module.ca]
+  module.ca]
   source = "./registry"
 
-  ca_private_key_pem = module.ca.private_key_pem
+  ca_private_key_pem       = module.ca.private_key_pem
   ca_private_key_algorithm = module.ca.private_key_algorithm
-  ca_public_key_pem = module.ca.public_key_pem
+  ca_public_key_pem        = module.ca.public_key_pem
 
   storage_class = module.longhorn.storage_class
 }
