@@ -95,6 +95,14 @@ resource "kubernetes_stateful_set" "registry" {
             name       = "registry-tls"
             mount_path = "/run/secrets/registry-tls"
           }
+          resources {
+            requests = {
+              cpu = "0.25"
+            }
+            limits = {
+              cpu = "0.25"
+            }
+          }
         }
         volume {
           name = "registry-tls"
