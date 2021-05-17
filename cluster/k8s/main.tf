@@ -107,7 +107,7 @@ resource "local_file" "Vagrantfile" {
       config.vm.disk :disk, size: "64GB", primary: true
 
       config.vm.provider "virtualbox" do |vbox|
-        vbox.cpus = 6
+        vbox.cpus = 4
         vbox.memory = GBasMB 16
       end
 
