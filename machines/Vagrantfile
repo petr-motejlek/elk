@@ -1,0 +1,60 @@
+nodes = (0..1).map { |n|
+  index = 10 + n
+
+  {
+    name: "node#{n}",
+    ext_ip: "192.168.0.#{index}",
+    int_ip: "192.168.255.#{index}"
+  }
+}
+
+Vagrant.configure("2") do |config|
+  config.vm.box = "bento/ubuntu-20.04"
+  config.vm.synced_folder "./", "/vagrant", disabled: true
+  config.ssh.forward_agent = true
+
+  # https://stackoverflow.com/a/60396146/4831064
+  # BEGIN
+  config.vm.usable_port_range = 22000..22222
+  config.vm.network :forwarded_port, guest: 22, host: 2222, disabled: true
+  config.vm.network :forwarded_port, guest: 22, host: 22000, id: "ssh", auto_correct: true
+  # END
+
+  config.vm.provision :shell, path: "provision_base.sh", privileged: false
+
+  config.vm.provider "virtualbox" do |vbox|
+    # https://github.com/kubernetes/kubernetes/issues/96459#issuecomment-857711708
+    # BEGIN
+    vbox.customize ["modifyvm", :id, "--paravirtprovider", "none"]
+    vbox.customize ["setextradata", :id, "VBoxInternal/Devices/VMMDev/0/Config/GetHostTimeDisabled", "1"]
+    # END
+  end
+
+  config.vm.define "control", primary: true do |node|
+    node.vm.hostname = "control"
+    node.vm.network "private_network", ip: "192.168.0.2", hostname: true
+    node.vm.network "private_network", ip: "192.168.255.2"
+    node.vm.synced_folder "../cluster", "/home/vagrant/cluster", type: "rsync"
+    node.vm.provider "virtualbox" do |vbox|
+      vbox.name = "elk-control"
+      vbox.cpus = 1
+      vbox.memory = 1 * 1024
+    end
+    node.vm.provision :shell, path: "provision_control.sh", privileged: false
+  end
+
+  nodes.each { |node|
+    config.vm.define node[:name] do |node_config|
+      name = node[:name]
+      node_config.vm.hostname = name
+      node_config.vm.network "private_network", ip: node[:ext_ip], hostname: true
+      node_config.vm.network "private_network", ip: node[:int_ip]
+      node_config.vm.provider "virtualbox" do |vbox|
+        vbox.name = "elk-#{name}"
+        vbox.cpus = 4
+        vbox.memory = 8 * 1024
+      end
+      node_config.vm.provision :shell, path: "provision_node.sh", privileged: false
+    end
+  }
+end
