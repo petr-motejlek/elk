@@ -26,9 +26,9 @@ terraform {
       version = "1.7.7"
     }
 
-    vagrant = {
-      source  = "bmatcuk/vagrant"
-      version = "~> 4.0.0"
+    ssh = {
+      source = "loafoe/ssh"
+      version = "0.2.0"
     }
 
   }
