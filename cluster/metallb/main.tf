@@ -27,19 +27,15 @@ locals {
   release-name = var.release-name
 }
 
+variable "chart-url" {}
 locals {
-  chart-name = abspath("${path.module}/chart")
+  chart-url = var.chart-url
 }
 
 resource "helm_release" "metallb" {
-  name = local.release-name
-
-  // repository = "https://charts.bitnami.com/bitnami/"
-  // chart      = "metallb"
-  chart = local.chart-name
-
+  name      = local.release-name
+  chart     = local.chart-url
   namespace = kubernetes_namespace.metallb.metadata[0].name
-
   values = [
     yamlencode({
       configInline = {

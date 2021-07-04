@@ -99,11 +99,15 @@ module "k8s" {
   node-int_ips = local.k8s-node-int_ips
 }
 
+variable "metallb-chart-url" {
+  default = "https://charts.bitnami.com/bitnami/metallb-2.4.3.tgz"
+}
 locals {
   metallb-namespace-name = "metallb-system"
   metallb-release-name   = "metallb"
   metallb-pool-names     = ["default", "exdns"]
   metallb-pool-ranges    = ["192.168.0.20-192.168.0.29", "${local.exdns-ip}-${local.exdns-ip}"]
+  metallb-chart-url      = var.metallb-chart-url
 }
 
 module "metallb" {
@@ -111,6 +115,7 @@ module "metallb" {
   module.k8s]
   source = "./metallb"
 
+  chart-url      = local.metallb-chart-url
   namespace-name = local.metallb-namespace-name
   release-name   = local.metallb-release-name
 
