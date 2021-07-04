@@ -39,6 +39,7 @@ resource "ssh_resource" "node-init" {
 
       sudo cp /home/vagrant/ca.pem /usr/local/share/ca-certificates/ca.crt
       sudo update-ca-certificates
+      sudo systemctl restart docker
     EOT
   ]
 }
