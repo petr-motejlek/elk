@@ -1,17 +1,36 @@
-variable "namespace" {}
-variable "storage_class" {}
+variable "namespace-name" {}
+locals {
+  namespace-name = var.namespace-name
+}
+
+variable "image-registry-url" {}
+variable "image-name" {}
+locals {
+  image-registry-url = var.image-registry-url
+  image-name         = var.image-name
+}
+
+variable "storage_class-name" {}
+locals {
+  storage_class-name = var.storage_class-name
+}
+
+locals {
+  docker-context-path     = abspath("${path.module}/docker")
+  docker-context-zip-path = "${local.docker-context-path}.zip"
+}
 
 data "archive_file" "context" {
   type        = "zip"
-  output_path = "${path.module}/docker.zip"
-  source_dir  = "${path.module}/docker"
+  output_path = local.docker-context-zip-path
+  source_dir  = local.docker-context-path
 }
 
 resource "docker_image" "elasticsearch" {
-  name = "registry.registry.cls.local/elasticsearch:${data.archive_file.context.output_md5}"
+  name = "${local.image-registry-url}/${local.image-name}:${data.archive_file.context.output_md5}"
 
   build {
-    path = "${path.module}/docker"
+    path = local.docker-context-path
     label = {
       md5 = data.archive_file.context.output_md5
     }
@@ -24,13 +43,20 @@ resource "docker_registry_image" "elasticsearch" {
   keep_remotely = true
 }
 
+variable "replicas-count" {
+  type = number
+}
+locals {
+  replicas-count = max(3, var.replicas-count)
+}
+
 resource "kubernetes_service" "elasticsearch-headless" {
   metadata {
     name = "elasticsearch-headless"
     labels = {
       app = "elasticsearch"
     }
-    namespace = var.namespace
+    namespace = local.namespace-name
     annotations = {
       "service.alpha.kubernetes.io/tolerate-unready-endpoints" : "true"
     }
@@ -55,7 +81,7 @@ resource "kubernetes_service" "elasticsearch-headless" {
 resource "kubernetes_stateful_set" "elasticsearch" {
   metadata {
     name      = "elasticsearch"
-    namespace = var.namespace
+    namespace = local.namespace-name
   }
   spec {
     selector {
@@ -64,7 +90,7 @@ resource "kubernetes_stateful_set" "elasticsearch" {
       }
     }
     service_name = kubernetes_service.elasticsearch-headless.metadata[0].name
-    replicas     = 3
+    replicas     = local.replicas-count
     template {
       metadata {
         labels = {
@@ -106,7 +132,7 @@ resource "kubernetes_stateful_set" "elasticsearch" {
           }
           env {
             name  = "DISCOVERY__SEED_HOSTS"
-            value = "elasticsearch-headless"
+            value = kubernetes_service.elasticsearch-headless.metadata[0].name
           }
           env {
             name  = "CLUSTER__INITIAL_MASTER_NODES"
@@ -129,7 +155,7 @@ resource "kubernetes_stateful_set" "elasticsearch" {
       }
       spec {
         access_modes       = ["ReadWriteOnce"]
-        storage_class_name = var.storage_class
+        storage_class_name = local.storage_class-name
         resources {
           requests = {
             storage = "8Gi"
@@ -140,19 +166,29 @@ resource "kubernetes_stateful_set" "elasticsearch" {
   }
 }
 
+variable "service-port" {
+  type = number
+}
+variable "service-name" {}
+locals {
+  service-port = var.service-port
+  service-name = var.service-name
+}
+
 resource "kubernetes_service" "elasticsearch" {
   metadata {
-    name = "elasticsearch"
+    name = local.service-name
     labels = {
 
       app = "elasticsearch"
     }
-    namespace = var.namespace
+    namespace = local.namespace-name
   }
   spec {
     port {
-      port = "9200"
-      name = "http"
+      port        = local.service-port
+      target_port = "9200"
+      name        = "http"
     }
     type = "ClusterIP"
     selector = {

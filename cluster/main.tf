@@ -164,10 +164,27 @@ module "registry" {
   service-port       = local.registry-service-port
 }
 
+variable "elasticsearch-replicas-count" {
+  default = 3
+  type    = number
+}
+locals {
+  elasticsearch-image-name     = "elasticsearch"
+  elasticsearch-service-name   = "elasticsearch"
+  elasticsearch-service-port   = 9200
+  elasticsearch-replicas-count = var.elasticsearch-replicas-count
+}
+
 module "elk" {
   depends_on = [
   module.registry]
   source = "./elk"
 
   storage_class = module.longhorn.storage_class-name
+
+  elasticsearch-image-registry-url = local.internal_registry-url
+  elasticsearch-image-name         = local.elasticsearch-image-name
+  elasticsearch-service-name       = local.elasticsearch-service-name
+  elasticsearch-service-port       = local.elasticsearch-service-port
+  elasticsearch-replicas-count     = local.elasticsearch-replicas-count
 }
