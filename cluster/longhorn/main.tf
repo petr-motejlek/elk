@@ -48,9 +48,9 @@ resource "helm_release" "longhorn" {
       defaultSettings = {
         defaultReplicaCount                  = local.replicas-count
         allowNodeDrainWithLastHealthyReplica = true
-        guaranteedEngineCPU                  = 2
-        guaranteedEngineManagerCPU           = 2
-        guaranteedReplicaManagerCPU          = 2
+        guaranteedEngineCPU                  = "250m"
+        guaranteedEngineManagerCPU           = "250m"
+        guaranteedReplicaManagerCPU          = "250m"
       }
     })
   ]
