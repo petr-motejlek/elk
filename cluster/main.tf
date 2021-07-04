@@ -174,6 +174,10 @@ locals {
   elasticsearch-service-port   = 9200
   elasticsearch-replicas-count = var.elasticsearch-replicas-count
 
+  logstash-image-name   = "logstash"
+  logstash-service-name = "logstash"
+  logstash-service-port = 5042
+
   kibana-image-name   = "kibana"
   kibana-service-name = "kibana"
   kibana-service-port = 5601
@@ -191,6 +195,11 @@ module "elk" {
   elasticsearch-service-name       = local.elasticsearch-service-name
   elasticsearch-service-port       = local.elasticsearch-service-port
   elasticsearch-replicas-count     = local.elasticsearch-replicas-count
+
+  logstash-image-registry-url = local.internal_registry-url
+  logstash-image-name         = local.logstash-image-name
+  logstash-service-name       = local.logstash-service-name
+  logstash-service-port       = local.logstash-service-port
 
   kibana-image-registry-url = local.internal_registry-url
   kibana-image-name         = local.kibana-image-name

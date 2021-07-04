@@ -35,13 +35,30 @@ module "elasticsearch" {
   replicas-count     = local.elasticsearch-replicas-count
 }
 
+variable "logstash-image-registry-url" {}
+variable "logstash-image-name" {}
+variable "logstash-service-name" {}
+variable "logstash-service-port" {
+  type = number
+}
+locals {
+  logstash-image-registry-url = var.logstash-image-registry-url
+  logstash-image-name         = var.logstash-image-name
+  logstash-service-name       = var.logstash-service-name
+  logstash-service-port       = var.logstash-service-port
+}
+
 module "logstash" {
   depends_on = [module.elasticsearch]
 
   source = "./logstash"
 
-  namespace     = kubernetes_namespace.elk.metadata.0.name
-  storage_class = var.storage_class
+  namespace-name     = kubernetes_namespace.elk.metadata.0.name
+  storage_class-name = var.storage_class
+  image-registry-url = local.logstash-image-registry-url
+  image-name         = local.logstash-image-name
+  service-name       = local.logstash-service-name
+  service-port       = local.logstash-service-port
 }
 
 variable "kibana-image-registry-url" {}
