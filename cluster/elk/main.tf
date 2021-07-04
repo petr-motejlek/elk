@@ -44,11 +44,28 @@ module "logstash" {
   storage_class = var.storage_class
 }
 
+variable "kibana-image-registry-url" {}
+variable "kibana-image-name" {}
+variable "kibana-service-name" {}
+variable "kibana-service-port" {
+  type = number
+}
+locals {
+  kibana-image-registry-url = var.kibana-image-registry-url
+  kibana-image-name         = var.kibana-image-name
+  kibana-service-name       = var.kibana-service-name
+  kibana-service-port       = var.kibana-service-port
+}
+
 module "kibana" {
   depends_on = [module.elasticsearch]
 
   source = "./kibana"
 
-  namespace     = kubernetes_namespace.elk.metadata.0.name
-  storage_class = var.storage_class
+  namespace-name     = kubernetes_namespace.elk.metadata.0.name
+  storage_class-name = var.storage_class
+  image-registry-url = local.kibana-image-registry-url
+  image-name         = local.kibana-image-name
+  service-name       = local.kibana-service-name
+  service-port       = local.kibana-service-port
 }
