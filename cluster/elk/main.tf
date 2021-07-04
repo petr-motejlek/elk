@@ -1,10 +1,18 @@
+variable "namespace-name" {}
+locals {
+  namespace-name = var.namespace-name
+}
+
 resource "kubernetes_namespace" "elk" {
   metadata {
-    name = "elk"
+    name = local.namespace-name
   }
 }
 
-variable "storage_class" {}
+variable "storage_class-name" {}
+locals {
+  storage_class-name = var.storage_class-name
+}
 
 variable "elasticsearch-image-registry-url" {}
 variable "elasticsearch-image-name" {}
@@ -27,7 +35,7 @@ module "elasticsearch" {
   source = "./elasticsearch"
 
   namespace-name     = kubernetes_namespace.elk.metadata.0.name
-  storage_class-name = var.storage_class
+  storage_class-name = local.storage_class-name
   image-registry-url = local.elasticsearch-image-registry-url
   image-name         = local.elasticsearch-image-name
   service-name       = local.elasticsearch-service-name
@@ -54,7 +62,7 @@ module "logstash" {
   source = "./logstash"
 
   namespace-name     = kubernetes_namespace.elk.metadata.0.name
-  storage_class-name = var.storage_class
+  storage_class-name = local.storage_class-name
   image-registry-url = local.logstash-image-registry-url
   image-name         = local.logstash-image-name
   service-name       = local.logstash-service-name
@@ -80,7 +88,7 @@ module "kibana" {
   source = "./kibana"
 
   namespace-name     = kubernetes_namespace.elk.metadata.0.name
-  storage_class-name = var.storage_class
+  storage_class-name = local.storage_class-name
   image-registry-url = local.kibana-image-registry-url
   image-name         = local.kibana-image-name
   service-name       = local.kibana-service-name

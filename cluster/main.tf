@@ -169,6 +169,8 @@ variable "elasticsearch-replicas-count" {
   type    = number
 }
 locals {
+  elk-namespace-name = "elk"
+
   elasticsearch-image-name     = "elasticsearch"
   elasticsearch-service-name   = "elasticsearch"
   elasticsearch-service-port   = 9200
@@ -188,7 +190,8 @@ module "elk" {
   module.registry]
   source = "./elk"
 
-  storage_class = module.longhorn.storage_class-name
+  namespace-name     = local.elk-namespace-name
+  storage_class-name = module.longhorn.storage_class-name
 
   elasticsearch-image-registry-url = local.internal_registry-url
   elasticsearch-image-name         = local.elasticsearch-image-name
