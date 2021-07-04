@@ -1,19 +1,3 @@
-provider "docker" {
-  registry_auth {
-    address  = "registry.registry.cls.local"
-    username = " "
-    password = " "
-  }
-}
-provider "helm" {
-  kubernetes {
-    config_path = module.k8s.kubeconfig-path
-  }
-}
-provider "kubernetes" {
-  config_path = module.k8s.kubeconfig-path
-}
-
 variable "dockerio_user" {
   sensitive = true
 }
@@ -28,6 +12,43 @@ locals {
   internal_registry-url   = local.registry-common_name
   internal_registry-user  = " "
   internal_registry-token = " "
+}
+
+locals {
+  registry-auths = [
+    {
+      address  = local.internal_registry-url
+      username = local.internal_registry-user
+      password = local.internal_registry-token
+    },
+    {
+      address  = local.dockerio-url
+      username = local.dockerio-user
+      password = local.dockerio-token
+    }
+  ]
+}
+
+provider "docker" {
+  dynamic "registry_auth" {
+    for_each = local.registry-auths
+
+    content {
+      address  = registry_auth.value.address
+      username = registry_auth.value.username
+      password = registry_auth.value.password
+    }
+  }
+}
+
+provider "helm" {
+  kubernetes {
+    config_path = module.k8s.kubeconfig-path
+  }
+}
+
+provider "kubernetes" {
+  config_path = module.k8s.kubeconfig-path
 }
 
 locals {
