@@ -7,11 +7,11 @@ provider "docker" {
 }
 provider "helm" {
   kubernetes {
-    config_path = module.k8s.kubeconfig_path
+    config_path = module.k8s.kubeconfig-path
   }
 }
 provider "kubernetes" {
-  config_path = module.k8s.kubeconfig_path
+  config_path = module.k8s.kubeconfig-path
 }
 
 variable "dockerio_user" {
@@ -19,6 +19,15 @@ variable "dockerio_user" {
 }
 variable "dockerio_token" {
   sensitive = true
+}
+locals {
+  dockerio-url   = "docker.io"
+  dockerio-user  = var.dockerio_user
+  dockerio-token = var.dockerio_token
+
+  internal_registry-url   = "registry.registry.cls.local"
+  internal_registry-user  = " "
+  internal_registry-token = " "
 }
 
 locals {
@@ -35,15 +44,38 @@ module "ca" {
   ca-public_key-path = local.ca-public_key-path
 }
 
+locals {
+  k8s-kubeconfig-path = abspath("${path.root}/kubeconfig.yaml")
+  k8s-cluster-name    = local.exdns-domain
+  k8s-node-names      = ["node0", "node1"]
+  k8s-node-ext_ips    = ["192.168.0.10", "192.168.0.11"]
+  k8s-node-int_ips = [
+    "192.168.255.10",
+  "192.168.255.11"]
+  k8s-release-name              = "k8s"
+  k8s-ca-public_key-remote-path = "/home/vagrant/ca.pem"
+}
+
 module "k8s" {
   depends_on = [
   module.ca]
   source = "./k8s"
 
-  dockerio_user      = var.dockerio_user
-  dockerio_token     = var.dockerio_token
-  ca_public_key_hash = module.ca.public_key-hash
-  ca_public_key_path = module.ca.public_key-path
+  cluster-name    = local.k8s-cluster-name
+  kubeconfig-path = local.k8s-kubeconfig-path
+
+  registry-urls       = [local.dockerio-url, local.internal_registry-url]
+  registry-users      = [local.dockerio-user, " "]
+  registry-tokens     = [local.dockerio-token, " "]
+  registry-isdefaults = [true, false]
+
+  ca-public_key-hash        = module.ca.public_key-hash
+  ca-public_key-path        = module.ca.public_key-path
+  ca-public_key-remote-path = local.k8s-ca-public_key-remote-path
+
+  node-names   = local.k8s-node-names
+  node-ext_ips = local.k8s-node-ext_ips
+  node-int_ips = local.k8s-node-int_ips
 }
 
 module "metallb" {

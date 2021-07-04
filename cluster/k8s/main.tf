@@ -1,20 +1,53 @@
-variable "dockerio_user" {}
-variable "dockerio_token" {}
-variable "ca_public_key_hash" {}
-variable "ca_public_key_path" {}
-
+variable "registry-urls" {
+  type = list(string)
+}
+variable "registry-users" {
+  type = list(string)
+}
+variable "registry-tokens" {
+  type = list(string)
+}
+variable "registry-isdefaults" {
+  type = list(bool)
+}
 locals {
-  nodes = {
-    node0 : {
-      ext_ip : "192.168.0.10",
-      int_ip : "192.168.255.10"
-    },
-    node1 : {
-      ext_ip : "192.168.0.11",
-      int_ip : "192.168.255.11"
-    },
-    //    ...
+  registries = [for idx, url in var.registry-urls : {
+    url        = url
+    user       = var.registry-users[idx]
+    token      = var.registry-tokens[idx]
+    is_default = var.registry-isdefaults[idx]
+  }]
+}
+
+variable "ca-public_key-hash" {}
+variable "ca-public_key-path" {}
+variable "ca-public_key-remote-path" {}
+locals {
+  ca-public_key-remote-path = var.ca-public_key-remote-path
+  ca-public_key-hash        = var.ca-public_key-hash
+  ca-public_key-path        = var.ca-public_key-path
+}
+
+variable "node-names" {}
+variable "node-ext_ips" {}
+variable "node-int_ips" {}
+locals {
+  nodes = { for idx, name in var.node-names : name => {
+    ext_ip = var.node-ext_ips[idx]
+    int_ip = var.node-int_ips[idx]
+    user   = "vagrant"
+    }
   }
+}
+
+variable "cluster-name" {}
+locals {
+  cluster-name = var.cluster-name
+}
+
+variable "kubeconfig-path" {}
+locals {
+  kubeconfig-path = var.kubeconfig-path
 }
 
 resource "ssh_resource" "node-init" {
@@ -25,8 +58,8 @@ resource "ssh_resource" "node-init" {
   private_key = "dummy value, because we use ssh-agent"
 
   file {
-    source      = var.ca_public_key_path
-    destination = "/home/vagrant/ca.pem"
+    source      = local.ca-public_key-path
+    destination = local.ca-public_key-remote-path
   }
 
   commands = [
@@ -37,7 +70,7 @@ resource "ssh_resource" "node-init" {
 
       export DEBIAN_FRONTEND=noninteractive
 
-      sudo cp /home/vagrant/ca.pem /usr/local/share/ca-certificates/ca.crt
+      sudo cp ${local.ca-public_key-remote-path} /usr/local/share/ca-certificates/ca.crt
       sudo update-ca-certificates
       sudo systemctl restart docker
     EOT
@@ -48,12 +81,17 @@ resource "rke_cluster" "k8s" {
   depends_on = [ssh_resource.node-init]
 
   ssh_agent_auth = true
-  cluster_name   = "k8s"
-  private_registries {
-    url        = "docker.io"
-    user       = var.dockerio_user
-    password   = var.dockerio_token
-    is_default = true
+  cluster_name   = local.cluster-name
+
+  dynamic "private_registries" {
+    for_each = local.registries
+
+    content {
+      url        = private_registries.value.url
+      user       = private_registries.value.user
+      password   = private_registries.value.token
+      is_default = private_registries.value.is_default
+    }
   }
   ingress {
     provider = "nginx"
@@ -74,7 +112,7 @@ resource "rke_cluster" "k8s" {
       address           = nodes.value.ext_ip
       hostname_override = nodes.key
       internal_address  = nodes.value.int_ip
-      user              = "vagrant"
+      user              = nodes.value.user
       role = [
         "controlplane",
         "etcd",
@@ -85,10 +123,10 @@ resource "rke_cluster" "k8s" {
 
 resource "local_file" "kubeconfig" {
   sensitive_content = rke_cluster.k8s.kube_config_yaml
-  filename          = "kubeconfig.yaml"
+  filename          = local.kubeconfig-path
   file_permission   = "0700"
 }
 
-output "kubeconfig_path" {
+output "kubeconfig-path" {
   value = local_file.kubeconfig.filename
 }
