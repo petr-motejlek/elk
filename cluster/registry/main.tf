@@ -1,11 +1,32 @@
-variable "ca_private_key_pem" {}
-variable "ca_private_key_algorithm" {}
-variable "ca_public_key_pem" {}
-variable "storage_class" {}
+variable "ca-private_key-pem" {}
+variable "ca-private_key-algorithm" {}
+variable "ca-public_key-pem" {}
+locals {
+  ca-private_key-pem       = var.ca-private_key-pem
+  ca-private_key-algorithm = var.ca-private_key-algorithm
+  ca-public_key-pem        = var.ca-public_key-pem
+}
+
+variable "storage_class-name" {}
+locals {
+  storage_class-name = var.storage_class-name
+}
+
+variable "namespace-name" {}
+locals {
+  namespace-name = var.namespace-name
+}
+
+variable "cert-valid-hours" {
+  type = number
+}
+locals {
+  cert-valid-hours = var.cert-valid-hours
+}
 
 resource "kubernetes_namespace" "registry" {
   metadata {
-    name = "registry"
+    name = local.namespace-name
   }
 }
 
@@ -14,25 +35,30 @@ resource "tls_private_key" "registry" {
   rsa_bits  = 4096
 }
 
+variable "common_name" {}
+locals {
+  common_name = var.common_name
+}
+
 resource "tls_cert_request" "registry" {
   key_algorithm   = tls_private_key.registry.algorithm
   private_key_pem = tls_private_key.registry.private_key_pem
 
   subject {
-    common_name = "registry.registry.cls.local"
+    common_name = local.common_name
   }
 
   dns_names = [
-  "registry.registry.cls.local"]
+  local.common_name]
 }
 
 resource "tls_locally_signed_cert" "registry" {
   cert_request_pem   = tls_cert_request.registry.cert_request_pem
-  ca_key_algorithm   = var.ca_private_key_algorithm
-  ca_private_key_pem = var.ca_private_key_pem
-  ca_cert_pem        = var.ca_public_key_pem
+  ca_key_algorithm   = local.ca-private_key-algorithm
+  ca_private_key_pem = local.ca-private_key-pem
+  ca_cert_pem        = local.ca-public_key-pem
 
-  validity_period_hours = 48
+  validity_period_hours = local.cert-valid-hours
 
   allowed_uses = [
     "key_encipherment",
@@ -53,6 +79,10 @@ resource "kubernetes_secret" "registry-tls" {
 }
 
 resource "kubernetes_stateful_set" "registry" {
+  timeouts {
+    create = "30m"
+  }
+
   metadata {
     name      = "registry"
     namespace = kubernetes_namespace.registry.metadata[0].name
@@ -120,7 +150,7 @@ resource "kubernetes_stateful_set" "registry" {
       spec {
         access_modes = [
         "ReadWriteOnce"]
-        storage_class_name = var.storage_class
+        storage_class_name = local.storage_class-name
         resources {
           requests = {
             storage = "8Gi"
@@ -131,9 +161,18 @@ resource "kubernetes_stateful_set" "registry" {
   }
 }
 
+variable "service-name" {}
+variable "service-port" {
+  type = number
+}
+locals {
+  service-name = var.service-name
+  service-port = var.service-port
+}
+
 resource "kubernetes_service" "registry" {
   metadata {
-    name      = "registry"
+    name      = local.service-name
     namespace = kubernetes_namespace.registry.metadata[0].name
   }
   spec {
@@ -142,7 +181,7 @@ resource "kubernetes_service" "registry" {
     }
     type = "LoadBalancer"
     port {
-      port        = 443
+      port        = local.service-port
       target_port = 5000
     }
   }

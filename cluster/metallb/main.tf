@@ -1,30 +1,54 @@
+variable "namespace-name" {}
+locals {
+  namespace-name = var.namespace-name
+}
+
+variable "pool-names" {
+  type = list(string)
+}
+variable "pool-ranges" {
+  type = list(string)
+}
+locals {
+  pools = [for idx, name in var.pool-names : {
+    name  = name
+    range = var.pool-ranges[idx]
+  }]
+}
+
 resource "kubernetes_namespace" "metallb" {
   metadata {
-    name = "metallb-system"
+    name = var.namespace-name
   }
 }
 
+variable "release-name" {}
+locals {
+  release-name = var.release-name
+}
+
+locals {
+  chart-name = abspath("${path.module}/chart")
+}
+
 resource "helm_release" "metallb" {
-  name = "metallb"
+  name = local.release-name
 
   // repository = "https://charts.bitnami.com/bitnami/"
   // chart      = "metallb"
-  chart = "${path.module}/chart"
+  chart = local.chart-name
 
   namespace = kubernetes_namespace.metallb.metadata[0].name
 
   values = [
-    <<-EOT
-      configInline:
-        address-pools:
-        - name: default
-          protocol: layer2
-          addresses:
-          - 192.168.0.20-192.168.0.29
-        - name: exdns
-          protocol: layer2
-          addresses:
-          - 192.168.0.32-192.168.0.32
-    EOT
+    yamlencode({
+      configInline = {
+        address-pools = [for name, pool in local.pools : {
+          name      = name
+          protocol  = "layer2"
+          addresses = [pool.range]
+        }]
+      }
+    })
   ]
 }
