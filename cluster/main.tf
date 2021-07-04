@@ -118,12 +118,15 @@ module "metallb" {
   pool-ranges = local.metallb-pool-ranges
 }
 
+variable "domain" {
+  default = "cls.local"
+}
 locals {
   exdns-namespace-name   = "exdns-system"
   exdns-release-name     = "exdns"
   exdns-chart-repository = "https://ori-edge.github.io/k8s_gateway/"
   exdns-chart-name       = "k8s-gateway"
-  exdns-domain           = "cls.local"
+  exdns-domain           = var.domain
   exdns-ip               = "192.168.0.32"
 }
 
