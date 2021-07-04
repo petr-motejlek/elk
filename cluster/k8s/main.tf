@@ -6,12 +6,12 @@ variable "ca_public_key_path" {}
 locals {
   nodes = {
     node0 : {
-      ext_ip: "192.168.0.10",
-      int_ip: "192.168.255.10"
+      ext_ip : "192.168.0.10",
+      int_ip : "192.168.255.10"
     },
     node1 : {
-      ext_ip: "192.168.0.11",
-      int_ip: "192.168.255.11"
+      ext_ip : "192.168.0.11",
+      int_ip : "192.168.255.11"
     },
     //    ...
   }
@@ -20,12 +20,12 @@ locals {
 resource "ssh_resource" "node-init" {
   for_each = local.nodes
 
-  host         = each.value.ext_ip
-  user         = "vagrant"
+  host        = each.value.ext_ip
+  user        = "vagrant"
   private_key = "dummy value, because we use ssh-agent"
 
   file {
-    source = var.ca_public_key_path
+    source      = var.ca_public_key_path
     destination = "/home/vagrant/ca.pem"
   }
 
@@ -47,7 +47,7 @@ resource "rke_cluster" "k8s" {
   depends_on = [ssh_resource.node-init]
 
   ssh_agent_auth = true
-  cluster_name = "k8s"
+  cluster_name   = "k8s"
   private_registries {
     url        = "docker.io"
     user       = var.dockerio_user
