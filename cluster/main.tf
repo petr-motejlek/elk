@@ -1,13 +1,13 @@
-variable "dockerio_user" {
+variable "dockerio-user" {
   sensitive = true
 }
-variable "dockerio_token" {
+variable "dockerio-token" {
   sensitive = true
 }
 locals {
   dockerio-url   = "docker.io"
-  dockerio-user  = var.dockerio_user
-  dockerio-token = var.dockerio_token
+  dockerio-user  = var.dockerio-user
+  dockerio-token = var.dockerio-token
 
   internal_registry-url   = local.registry-common_name
   internal_registry-user  = " "

@@ -19,7 +19,7 @@ The solution consists of 2 parts:
 - Install Vagrant and VirtualBox and run the below commands in Powershell (Windows)
   or Bash (Mac/Linux/WSL).
 - `cd machines && env VAGRANT_EXPERIMENTAL=disks vagrant up && vagrant ssh control`
-  - `cd cluster && terraform init && terraform apply -auto-approve -var dockerio_user=USER -var dockerio_token=TOKEN`
+  - `cd cluster && terraform init && terraform apply -auto-approve -var dockerio-user=USER -var dockerio-token=TOKEN`
     The docker.io user and token are required as spinning up the cluster can be quite heavy on pulling images from
     Docker Hub (especially if you plan to repeat the process several times), and since they do have a limit on pulls
     (which I frequently run into :)), it's best to avoid it by registering a free account, generating a token for it,
