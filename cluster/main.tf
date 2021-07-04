@@ -78,10 +78,23 @@ module "k8s" {
   node-int_ips = local.k8s-node-int_ips
 }
 
+locals {
+  metallb-namespace-name = "metallb-system"
+  metallb-release-name   = "metallb"
+  metallb-pool-names     = ["default", "exdns"]
+  metallb-pool-ranges    = ["192.168.0.20-192.168.0.29", "${local.exdns-ip}-${local.exdns-ip}"]
+}
+
 module "metallb" {
   depends_on = [
   module.k8s]
   source = "./metallb"
+
+  namespace-name = local.metallb-namespace-name
+  release-name   = local.metallb-release-name
+
+  pool-names  = local.metallb-pool-names
+  pool-ranges = local.metallb-pool-ranges
 }
 
 locals {
