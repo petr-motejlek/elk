@@ -19,10 +19,6 @@ locals {
   storage_class-name = var.storage_class-name
 }
 
-locals {
-  chart-name = abspath("${path.module}/chart")
-}
-
 variable "replicas-count" {
   type = number
 }
@@ -30,16 +26,15 @@ locals {
   replicas-count = var.replicas-count
 }
 
+variable "chart-url" {}
+locals {
+  chart-url = var.chart-url
+}
+
 resource "helm_release" "longhorn" {
-  name = local.release-name
-
-  # repository = "https://charts.longhorn.io"
-  # chart      = "longhorn"
-
-  chart = local.chart-name
-
+  name      = local.release-name
+  chart     = local.chart-url
   namespace = kubernetes_namespace.longhorn.metadata[0].name
-
   values = [
     yamlencode({
       persistence = {

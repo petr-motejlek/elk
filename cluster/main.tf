@@ -147,11 +147,15 @@ variable "longhorn-replicas-count" {
   type    = number
   default = 2
 }
+variable "longhorn-chart-url" {
+  default = "https://github.com/longhorn/charts/releases/download/longhorn-1.1.0/longhorn-1.1.0.tgz"
+}
 locals {
   longhorn-namespace-name     = "longhorn-system"
   longhorn-release-name       = "longhorn"
   longhorn-storage_class-name = "longhorn"
   longhorn-replicas-count     = max((length(local.k8s-node-names) >= 2 ? 2 : 1), var.longhorn-replicas-count)
+  longhorn-chart-url          = var.longhorn-chart-url
 }
 
 module "longhorn" {
@@ -159,6 +163,7 @@ module "longhorn" {
   module.metallb]
   source = "./longhorn"
 
+  chart-url          = local.longhorn-chart-url
   namespace-name     = local.longhorn-namespace-name
   release-name       = local.longhorn-release-name
   storage_class-name = local.longhorn-storage_class-name
