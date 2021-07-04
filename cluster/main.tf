@@ -143,11 +143,15 @@ module "exdns" {
   release-name     = local.exdns-release-name
 }
 
+variable "longhorn-replicas-count" {
+  type    = number
+  default = 2
+}
 locals {
   longhorn-namespace-name     = "longhorn-system"
   longhorn-release-name       = "longhorn"
   longhorn-storage_class-name = "longhorn"
-  longhorn-replicas-count     = 1
+  longhorn-replicas-count     = max(1, var.longhorn-replicas-count)
 }
 
 module "longhorn" {
