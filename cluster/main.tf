@@ -99,11 +99,15 @@ module "k8s" {
   node-int_ips = local.k8s-node-int_ips
 }
 
+variable "metallb-chart-url" {
+  default = "https://charts.bitnami.com/bitnami/metallb-2.4.3.tgz"
+}
 locals {
   metallb-namespace-name = "metallb-system"
   metallb-release-name   = "metallb"
   metallb-pool-names     = ["default", "exdns"]
   metallb-pool-ranges    = ["192.168.0.20-192.168.0.29", "${local.exdns-ip}-${local.exdns-ip}"]
+  metallb-chart-url      = var.metallb-chart-url
 }
 
 module "metallb" {
@@ -111,6 +115,7 @@ module "metallb" {
   module.k8s]
   source = "./metallb"
 
+  chart-url      = local.metallb-chart-url
   namespace-name = local.metallb-namespace-name
   release-name   = local.metallb-release-name
 
@@ -147,11 +152,15 @@ variable "longhorn-replicas-count" {
   type    = number
   default = 2
 }
+variable "longhorn-chart-url" {
+  default = "https://github.com/longhorn/charts/releases/download/longhorn-1.1.0/longhorn-1.1.0.tgz"
+}
 locals {
   longhorn-namespace-name     = "longhorn-system"
   longhorn-release-name       = "longhorn"
   longhorn-storage_class-name = "longhorn"
   longhorn-replicas-count     = max((length(local.k8s-node-names) >= 2 ? 2 : 1), var.longhorn-replicas-count)
+  longhorn-chart-url          = var.longhorn-chart-url
 }
 
 module "longhorn" {
@@ -159,6 +168,7 @@ module "longhorn" {
   module.metallb]
   source = "./longhorn"
 
+  chart-url          = local.longhorn-chart-url
   namespace-name     = local.longhorn-namespace-name
   release-name       = local.longhorn-release-name
   storage_class-name = local.longhorn-storage_class-name
