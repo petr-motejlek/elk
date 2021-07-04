@@ -89,8 +89,9 @@ resource "kubernetes_stateful_set" "elasticsearch" {
         app = "elasticsearch"
       }
     }
-    service_name = kubernetes_service.elasticsearch-headless.metadata[0].name
-    replicas     = local.replicas-count
+    service_name          = kubernetes_service.elasticsearch-headless.metadata[0].name
+    replicas              = local.replicas-count
+    pod_management_policy = "Parallel"
     template {
       metadata {
         labels = {
