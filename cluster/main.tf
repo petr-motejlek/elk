@@ -25,7 +25,7 @@ locals {
   dockerio-user  = var.dockerio_user
   dockerio-token = var.dockerio_token
 
-  internal_registry-url   = "registry.registry.cls.local"
+  internal_registry-url   = local.registry-common_name
   internal_registry-user  = " "
   internal_registry-token = " "
 }
@@ -112,17 +112,31 @@ module "longhorn" {
   source = "./longhorn"
 }
 
+locals {
+  registry-common_name        = "${local.registry-service-name}.${local.registry-namespace-name}.${local.exdns-domain}"
+  registry-namespace-name     = "registry"
+  registry-cert-valid-hours   = 24 * 365
+  registry-storage_class-name = "longhorn"
+  registry-service-name       = "registry"
+  registry-service-port       = 443
+}
+
 module "registry" {
   depends_on = [
     module.longhorn,
   module.ca]
   source = "./registry"
 
-  ca_private_key_pem       = module.ca.private_key-pem
-  ca_private_key_algorithm = module.ca.private_key-algorithm
-  ca_public_key_pem        = module.ca.public_key-pem
+  common_name              = local.registry-common_name
+  ca-private_key-pem       = module.ca.private_key-pem
+  ca-private_key-algorithm = module.ca.private_key-algorithm
+  ca-public_key-pem        = module.ca.public_key-pem
 
-  storage_class = module.longhorn.storage_class
+  storage_class-name = local.registry-storage_class-name
+  namespace-name     = local.registry-namespace-name
+  cert-valid-hours   = local.registry-cert-valid-hours
+  service-name       = local.registry-service-name
+  service-port       = local.registry-service-port
 }
 
 module "elk" {
