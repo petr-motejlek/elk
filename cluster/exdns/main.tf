@@ -1,22 +1,40 @@
+variable "namespace-name" {}
+locals {
+  namespace-name = var.namespace-name
+}
+
 resource "kubernetes_namespace" "exdns" {
   metadata {
-    name = "exdns-system"
+    name = local.namespace-name
   }
 }
 
-resource "helm_release" "exdns" {
-  name = "exdns"
+variable "release-name" {}
+variable "chart-repository" {}
+variable "chart-name" {}
+variable "domain" {}
+variable "ip" {}
+locals {
+  release-name     = var.release-name
+  chart-repository = var.chart-repository
+  chart-name       = var.chart-name
+  domain           = var.domain
+  ip               = var.ip
+}
 
-  repository = "https://ori-edge.github.io/k8s_gateway/"
-  chart      = "k8s-gateway"
+resource "helm_release" "exdns" {
+  name = local.release-name
+
+  repository = local.chart-repository
+  chart      = local.chart-name
 
   namespace = kubernetes_namespace.exdns.metadata[0].name
 
   values = [
     yamlencode({
-      domain = "cls.local"
+      domain = local.domain
       service = {
-        loadBalancerIP = "192.168.0.32"
+        loadBalancerIP = local.ip
       }
     })
   ]

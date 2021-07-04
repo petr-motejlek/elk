@@ -52,10 +52,26 @@ module "metallb" {
   source = "./metallb"
 }
 
+locals {
+  exdns-namespace-name   = "exdns-system"
+  exdns-release-name     = "exdns"
+  exdns-chart-repository = "https://ori-edge.github.io/k8s_gateway/"
+  exdns-chart-name       = "k8s-gateway"
+  exdns-domain           = "cls.local"
+  exdns-ip               = "192.168.0.32"
+}
+
 module "exdns" {
   depends_on = [
   module.metallb]
   source = "./exdns"
+
+  namespace-name   = local.exdns-namespace-name
+  chart-name       = local.exdns-chart-name
+  chart-repository = local.exdns-chart-repository
+  domain           = local.exdns-domain
+  ip               = local.exdns-ip
+  release-name     = local.exdns-release-name
 }
 
 module "longhorn" {
