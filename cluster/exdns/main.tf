@@ -13,11 +13,12 @@ resource "helm_release" "exdns" {
   namespace = kubernetes_namespace.exdns.metadata[0].name
 
   values = [
-    <<-EOT
-      domain: cls.local
-      service:
-        loadBalancerIP: 192.168.0.32
-    EOT
+    yamlencode({
+      domain = "cls.local"
+      service = {
+        loadBalancerIP = "192.168.0.32"
+      }
+    })
   ]
 }
 

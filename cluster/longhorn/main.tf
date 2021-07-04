@@ -15,16 +15,18 @@ resource "helm_release" "longhorn" {
   namespace = kubernetes_namespace.longhorn.metadata[0].name
 
   values = [
-    <<-EOT
-      persistence:
-        defaultClassReplicaCount: 1
-      defaultSettings:
-        defaultReplicaCount: 1
-        allowNodeDrainWithLastHealthyReplica: true
-        guaranteedEngineCPU: 2
-        guaranteedEngineManagerCPU: 2
-        guaranteedReplicaManagerCPU: 2
-    EOT
+    yamlencode({
+      persistence = {
+        defaultClassReplicaCount = 1
+      }
+      defaultSettings = {
+        defaultReplicaCount                  = 1
+        allowNodeDrainWithLastHealthyReplica = true
+        guaranteedEngineCPU                  = 2
+        guaranteedEngineManagerCPU           = 2
+        guaranteedReplicaManagerCPU          = 2
+      }
+    })
   ]
 }
 
