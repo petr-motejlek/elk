@@ -119,17 +119,29 @@ module "exdns" {
   release-name     = local.exdns-release-name
 }
 
+locals {
+  longhorn-namespace-name     = "longhorn-system"
+  longhorn-release-name       = "longhorn"
+  longhorn-storage_class-name = "longhorn"
+  longhorn-replicas-count     = 1
+}
+
 module "longhorn" {
   depends_on = [
   module.metallb]
   source = "./longhorn"
+
+  namespace-name     = local.longhorn-namespace-name
+  release-name       = local.longhorn-release-name
+  storage_class-name = local.longhorn-storage_class-name
+  replicas-count     = local.longhorn-replicas-count
 }
 
 locals {
   registry-common_name        = "${local.registry-service-name}.${local.registry-namespace-name}.${local.exdns-domain}"
   registry-namespace-name     = "registry"
   registry-cert-valid-hours   = 24 * 365
-  registry-storage_class-name = "longhorn"
+  registry-storage_class-name = module.longhorn.storage_class-name
   registry-service-name       = "registry"
   registry-service-port       = 443
 }
@@ -157,5 +169,5 @@ module "elk" {
   module.registry]
   source = "./elk"
 
-  storage_class = module.longhorn.storage_class
+  storage_class = module.longhorn.storage_class-name
 }
