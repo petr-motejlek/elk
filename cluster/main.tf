@@ -151,7 +151,7 @@ locals {
   longhorn-namespace-name     = "longhorn-system"
   longhorn-release-name       = "longhorn"
   longhorn-storage_class-name = "longhorn"
-  longhorn-replicas-count     = max(1, var.longhorn-replicas-count)
+  longhorn-replicas-count     = max((length(local.k8s-node-names) >= 2 ? 2 : 1), var.longhorn-replicas-count)
 }
 
 module "longhorn" {
