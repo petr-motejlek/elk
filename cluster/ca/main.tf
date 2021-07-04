@@ -29,7 +29,14 @@ resource "local_file" "ca" {
 
 resource "null_resource" "ca" {
   provisioner "local-exec" {
-    command = "sudo openssl x509 -in ${local_file.ca.filename} -out /usr/local/share/ca-certificates/ca.crt && sudo update-ca-certificates && sudo systemctl restart docker"
+    interpreter = ["/usr/bin/env", "bash", "-xeuo", "pipefail", "-c"]
+    command     = <<-EOT
+      sudo openssl x509 \
+        -in ${local_file.ca.filename} \
+        -out /usr/local/share/ca-certificates/ca.crt;
+      sudo update-ca-certificates;
+      sudo systemctl restart docker;
+    EOT
   }
 }
 
