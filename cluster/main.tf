@@ -218,6 +218,7 @@ locals {
   logstash-image-name   = "logstash"
   logstash-service-name = "logstash"
   logstash-service-port = 5042
+  logstash-release-name = "logstash"
 
   kibana-image-name   = "kibana"
   kibana-service-name = "kibana"
@@ -244,6 +245,7 @@ module "elk" {
   logstash-image-name         = local.logstash-image-name
   logstash-service-name       = local.logstash-service-name
   logstash-service-port       = local.logstash-service-port
+  logstash-release-name       = local.logstash-release-name
 
   kibana-image-registry-url = local.internal_registry-url
   kibana-image-name         = local.kibana-image-name

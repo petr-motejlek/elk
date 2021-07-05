@@ -52,11 +52,13 @@ variable "logstash-service-name" {}
 variable "logstash-service-port" {
   type = number
 }
+variable "logstash-release-name" {}
 locals {
   logstash-image-registry-url = var.logstash-image-registry-url
   logstash-image-name         = var.logstash-image-name
   logstash-service-name       = var.logstash-service-name
   logstash-service-port       = var.logstash-service-port
+  logstash-release-name       = var.logstash-release-name
 }
 
 module "logstash" {
@@ -70,6 +72,7 @@ module "logstash" {
   image-name         = local.logstash-image-name
   service-name       = local.logstash-service-name
   service-port       = local.logstash-service-port
+  release-name       = local.logstash-release-name
 }
 
 variable "kibana-image-registry-url" {}
