@@ -213,6 +213,7 @@ locals {
   elasticsearch-service-name   = "elasticsearch"
   elasticsearch-service-port   = 9200
   elasticsearch-replicas-count = var.elasticsearch-replicas-count
+  elasticsearch-release-name   = "elasticsearch"
 
   logstash-image-name   = "logstash"
   logstash-service-name = "logstash"
@@ -236,6 +237,7 @@ module "elk" {
   elasticsearch-service-name       = local.elasticsearch-service-name
   elasticsearch-service-port       = local.elasticsearch-service-port
   elasticsearch-replicas-count     = local.elasticsearch-replicas-count
+  elasticsearch-release-name       = local.elasticsearch-release-name
 
   logstash-image-registry-url = local.internal_registry-url
   logstash-image-name         = local.logstash-image-name

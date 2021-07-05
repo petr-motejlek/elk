@@ -50,151 +50,36 @@ locals {
   replicas-count = max(3, var.replicas-count)
 }
 
-resource "kubernetes_service" "elasticsearch-headless" {
-  metadata {
-    name = "elasticsearch-headless"
-    labels = {
-      app = "elasticsearch"
-    }
-    namespace = local.namespace-name
-    annotations = {
-      "service.alpha.kubernetes.io/tolerate-unready-endpoints" : "true"
-    }
-  }
-  spec {
-    port {
-      port = "9200"
-      name = "http"
-    }
-    port {
-      port = "9300"
-      name = "transport"
-    }
-    cluster_ip                  = "None"
-    publish_not_ready_addresses = true
-    selector = {
-      app = "elasticsearch"
-    }
-  }
-}
-
-resource "kubernetes_stateful_set" "elasticsearch" {
-  metadata {
-    name      = "elasticsearch"
-    namespace = local.namespace-name
-  }
-  spec {
-    selector {
-      match_labels = {
-        app = "elasticsearch"
-      }
-    }
-    service_name          = kubernetes_service.elasticsearch-headless.metadata[0].name
-    replicas              = local.replicas-count
-    pod_management_policy = "Parallel"
-    template {
-      metadata {
-        labels = {
-          app = "elasticsearch"
-        }
-      }
-      spec {
-        security_context {
-          fs_group     = 106
-          run_as_user  = 105
-          run_as_group = 106
-        }
-        container {
-          name  = "elasticsearch"
-          image = "${docker_registry_image.elasticsearch.name}@${docker_registry_image.elasticsearch.sha256_digest}"
-          port {
-            container_port = 9200
-            name           = "http"
-          }
-          port {
-            container_port = 9300
-            name           = "transport"
-          }
-          volume_mount {
-            name       = "elasticsearch-data"
-            mount_path = "/var/lib/elasticsearch"
-          }
-          env {
-            name = "NODE__NAME"
-            value_from {
-              field_ref {
-                field_path = "metadata.name"
-              }
-            }
-          }
-          env {
-            name  = "NETWORK__HOST"
-            value = "0.0.0.0"
-          }
-          env {
-            name  = "DISCOVERY__SEED_HOSTS"
-            value = kubernetes_service.elasticsearch-headless.metadata[0].name
-          }
-          env {
-            name  = "CLUSTER__INITIAL_MASTER_NODES"
-            value = "elasticsearch-0,elasticsearch-1,elasticsearch-2"
-          }
-          resources {
-            requests = {
-              memory = "2Gi"
-            }
-            limits = {
-              memory = "2Gi"
-            }
-          }
-        }
-      }
-    }
-    volume_claim_template {
-      metadata {
-        name = "elasticsearch-data"
-      }
-      spec {
-        access_modes       = ["ReadWriteOnce"]
-        storage_class_name = local.storage_class-name
-        resources {
-          requests = {
-            storage = "8Gi"
-          }
-        }
-      }
-    }
-  }
-}
-
-variable "service-port" {
-  type = number
-}
 variable "service-name" {}
+variable "service-port" {}
 locals {
-  service-port = var.service-port
   service-name = var.service-name
+  service-port = var.service-port
 }
 
-resource "kubernetes_service" "elasticsearch" {
-  metadata {
-    name = local.service-name
-    labels = {
-
-      app = "elasticsearch"
-    }
-    namespace = local.namespace-name
-  }
-  spec {
-    port {
-      port        = local.service-port
-      target_port = "9200"
-      name        = "http"
-    }
-    type = "ClusterIP"
-    selector = {
-      app = "elasticsearch"
-    }
-  }
+variable "release-name" {}
+locals {
+  release-name = var.release-name
 }
 
+locals {
+  image-url = "${docker_registry_image.elasticsearch.name}@${docker_registry_image.elasticsearch.sha256_digest}"
+}
+
+resource "helm_release" "elasticsearch" {
+  name = local.release-name
+
+  chart = abspath("${path.module}/elasticsearch-chart")
+
+  namespace = local.namespace-name
+
+  values = [
+    yamlencode({
+      serviceName      = local.service-name
+      servicePort      = local.service-port
+      replicasCount    = local.replicas-count
+      imageUrl         = local.image-url
+      storageClassName = local.storage_class-name
+    })
+  ]
+}

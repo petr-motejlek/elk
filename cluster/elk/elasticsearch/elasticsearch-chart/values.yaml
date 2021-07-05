@@ -1,0 +1,5 @@
+serviceName: service-name
+servicePort: 666
+replicasCount: 1
+imageUrl: image-url
+storageClassName: storage-class

@@ -23,12 +23,14 @@ variable "elasticsearch-service-name" {}
 variable "elasticsearch-replicas-count" {
   type = number
 }
+variable "elasticsearch-release-name" {}
 locals {
   elasticsearch-image-registry-url = var.elasticsearch-image-registry-url
   elasticsearch-image-name         = var.elasticsearch-image-name
   elasticsearch-service-port       = var.elasticsearch-service-port
   elasticsearch-service-name       = var.elasticsearch-service-name
   elasticsearch-replicas-count     = var.elasticsearch-replicas-count
+  elasticsearch-release-name       = var.elasticsearch-release-name
 }
 
 module "elasticsearch" {
@@ -41,6 +43,7 @@ module "elasticsearch" {
   service-name       = local.elasticsearch-service-name
   service-port       = local.elasticsearch-service-port
   replicas-count     = local.elasticsearch-replicas-count
+  release-name       = local.elasticsearch-release-name
 }
 
 variable "logstash-image-registry-url" {}

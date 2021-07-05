@@ -1,0 +1,103 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    service.alpha.kubernetes.io/tolerate-unready-endpoints: "true"
+  labels:
+    app: elasticsearch
+  name: elasticsearch-headless
+spec:
+  clusterIP: None
+  ports:
+    - name: http
+      port: 9200
+      protocol: TCP
+      targetPort: 9200
+    - name: transport
+      port: 9300
+      protocol: TCP
+      targetPort: 9300
+  publishNotReadyAddresses: true
+  selector:
+    app: elasticsearch
+  type: ClusterIP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: elasticsearch
+  name: {{ include "serviceName" . | quote }}
+spec:
+  ports:
+    - name: http
+      port: {{ include "servicePort" . }}
+      protocol: TCP
+      targetPort: 9200
+  selector:
+    app: elasticsearch
+  type: ClusterIP
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: elasticsearch
+spec:
+  podManagementPolicy: Parallel
+  replicas: {{ include "replicasCount" . }}
+  selector:
+    matchLabels:
+      app: elasticsearch
+  serviceName: elasticsearch-headless
+  template:
+    metadata:
+      labels:
+        app: elasticsearch
+    spec:
+      containers:
+        - env:
+            - name: NODE__NAME
+              valueFrom:
+                fieldRef:
+                  apiVersion: v1
+                  fieldPath: metadata.name
+            - name: NETWORK__HOST
+              value: 0.0.0.0
+            - name: DISCOVERY__SEED_HOSTS
+              value: elasticsearch-headless
+            - name: CLUSTER__INITIAL_MASTER_NODES
+              value: {{ include "initialMasterNodes" . | quote }}
+          image: {{ include "imageUrl" . | quote }}
+          name: elasticsearch
+          ports:
+            - containerPort: 9200
+              name: http
+              protocol: TCP
+            - containerPort: 9300
+              name: transport
+              protocol: TCP
+          resources:
+            limits:
+              memory: 2Gi
+            requests:
+              memory: 2Gi
+          volumeMounts:
+            - mountPath: /var/lib/elasticsearch
+              name: elasticsearch-data
+      securityContext:
+        fsGroup: 106
+        runAsGroup: 106
+        runAsUser: 105
+  volumeClaimTemplates:
+    - apiVersion: v1
+      kind: PersistentVolumeClaim
+      metadata:
+        name: elasticsearch-data
+      spec:
+        accessModes:
+          - ReadWriteOnce
+        resources:
+          requests:
+            storage: 8Gi
+        storageClassName: {{ include "storageClassName" . | quote }}
