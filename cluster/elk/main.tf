@@ -78,11 +78,13 @@ variable "kibana-service-name" {}
 variable "kibana-service-port" {
   type = number
 }
+variable "kibana-release-name" {}
 locals {
   kibana-image-registry-url = var.kibana-image-registry-url
   kibana-image-name         = var.kibana-image-name
   kibana-service-name       = var.kibana-service-name
   kibana-service-port       = var.kibana-service-port
+  kibana-release-name       = var.kibana-release-name
 }
 
 module "kibana" {
@@ -96,4 +98,5 @@ module "kibana" {
   image-name         = local.kibana-image-name
   service-name       = local.kibana-service-name
   service-port       = local.kibana-service-port
+  release-name       = local.kibana-release-name
 }

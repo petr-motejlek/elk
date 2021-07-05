@@ -222,6 +222,7 @@ locals {
   kibana-image-name   = "kibana"
   kibana-service-name = "kibana"
   kibana-service-port = 5601
+  kibana-release-name = "kibana"
 }
 
 module "elk" {
@@ -248,4 +249,5 @@ module "elk" {
   kibana-image-name         = local.kibana-image-name
   kibana-service-name       = local.kibana-service-name
   kibana-service-port       = local.kibana-service-port
+  kibana-release-name       = local.kibana-release-name
 }
