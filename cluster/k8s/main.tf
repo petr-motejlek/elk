@@ -1,54 +1,54 @@
-variable "registry-urls" {
+variable "registry_urls" {
   type = list(string)
 }
-variable "registry-users" {
+variable "registry_users" {
   type = list(string)
 }
-variable "registry-tokens" {
+variable "registry_tokens" {
   type = list(string)
 }
-variable "registry-isdefaults" {
+variable "registry_isdefaults" {
   type = list(bool)
 }
 locals {
-  registries = [for idx, url in var.registry-urls : {
+  registries = [for idx, url in var.registry_urls : {
     url        = url
-    user       = var.registry-users[idx]
-    token      = var.registry-tokens[idx]
-    is_default = var.registry-isdefaults[idx]
+    user       = var.registry_users[idx]
+    token      = var.registry_tokens[idx]
+    is_default = var.registry_isdefaults[idx]
   }]
 }
 
-variable "ca-public_key-path" {}
-variable "ca-public_key-remote-path" {}
+variable "ca_public_key_path" {}
+variable "ca_public_key_remote_path" {}
 locals {
-  ca-public_key-remote-path = var.ca-public_key-remote-path
-  ca-public_key-path        = var.ca-public_key-path
+  ca_public_key_remote_path = var.ca_public_key_remote_path
+  ca_public_key_path        = var.ca_public_key_path
 }
 
-variable "node-names" {}
-variable "node-ext_ips" {}
-variable "node-int_ips" {}
+variable "node_names" {}
+variable "node_ext_ips" {}
+variable "node_int_ips" {}
 locals {
-  nodes = { for idx, name in var.node-names : name => {
-    ext_ip = var.node-ext_ips[idx]
-    int_ip = var.node-int_ips[idx]
+  nodes = { for idx, name in var.node_names : name => {
+    ext_ip = var.node_ext_ips[idx]
+    int_ip = var.node_int_ips[idx]
     user   = "vagrant"
     }
   }
 }
 
-variable "cluster-name" {}
+variable "cluster_name" {}
 locals {
-  cluster-name = var.cluster-name
+  cluster_name = var.cluster_name
 }
 
-variable "kubeconfig-path" {}
+variable "kubeconfig_path" {}
 locals {
-  kubeconfig-path = var.kubeconfig-path
+  kubeconfig_path = var.kubeconfig_path
 }
 
-resource "ssh_resource" "node-init" {
+resource "ssh_resource" "node_init" {
   for_each = local.nodes
 
   host        = each.value.ext_ip
@@ -56,8 +56,8 @@ resource "ssh_resource" "node-init" {
   private_key = "dummy value, because we use ssh-agent"
 
   file {
-    source      = local.ca-public_key-path
-    destination = local.ca-public_key-remote-path
+    source      = local.ca_public_key_path
+    destination = local.ca_public_key_remote_path
   }
 
   commands = [
@@ -68,7 +68,7 @@ resource "ssh_resource" "node-init" {
 
       export DEBIAN_FRONTEND=noninteractive
 
-      sudo cp ${local.ca-public_key-remote-path} /usr/local/share/ca-certificates/ca.crt
+      sudo cp ${local.ca_public_key_remote_path} /usr/local/share/ca-certificates/ca.crt
       sudo update-ca-certificates
       sudo systemctl restart docker
     EOT
@@ -76,10 +76,10 @@ resource "ssh_resource" "node-init" {
 }
 
 resource "rke_cluster" "k8s" {
-  depends_on = [ssh_resource.node-init]
+  depends_on = [ssh_resource.node_init]
 
   ssh_agent_auth = true
-  cluster_name   = local.cluster-name
+  cluster_name   = local.cluster_name
 
   dynamic "private_registries" {
     for_each = local.registries
@@ -121,10 +121,10 @@ resource "rke_cluster" "k8s" {
 
 resource "local_file" "kubeconfig" {
   sensitive_content = rke_cluster.k8s.kube_config_yaml
-  filename          = local.kubeconfig-path
+  filename          = local.kubeconfig_path
   file_permission   = "0700"
 }
 
-output "kubeconfig-path" {
+output "kubeconfig_path" {
   value = local_file.kubeconfig.filename
 }

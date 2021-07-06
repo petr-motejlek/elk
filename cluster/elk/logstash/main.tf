@@ -1,36 +1,36 @@
-variable "namespace-name" {}
+variable "namespace_name" {}
 locals {
-  namespace-name = var.namespace-name
+  namespace_name = var.namespace_name
 }
 
-variable "storage_class-name" {}
+variable "storage_class_name" {}
 locals {
-  storage_class-name = var.storage_class-name
+  storage_class_name = var.storage_class_name
 }
 
-variable "image-registry-url" {}
-variable "image-name" {}
+variable "image_registry_url" {}
+variable "image_name" {}
 locals {
-  image-registry-url = var.image-registry-url
-  image-name         = var.image-name
+  image_registry_url = var.image_registry_url
+  image_name         = var.image_name
 }
 
 locals {
-  docker-context-path     = abspath("${path.module}/docker")
-  docker-context-zip-path = "${local.docker-context-path}.zip"
+  docker_context_path     = abspath("${path.module}/docker")
+  docker_context_zip_path = "${local.docker_context_path}.zip"
 }
 
 data "archive_file" "context" {
   type        = "zip"
-  output_path = local.docker-context-zip-path
-  source_dir  = local.docker-context-path
+  output_path = local.docker_context_zip_path
+  source_dir  = local.docker_context_path
 }
 
 resource "docker_image" "logstash" {
-  name = "${local.image-registry-url}/${local.image-name}:${data.archive_file.context.output_md5}"
+  name = "${local.image_registry_url}/${local.image_name}:${data.archive_file.context.output_md5}"
 
   build {
-    path = local.docker-context-path
+    path = local.docker_context_path
     label = {
       md5 = data.archive_file.context.output_md5
     }
@@ -43,35 +43,35 @@ resource "docker_registry_image" "logstash" {
   keep_remotely = true
 }
 
-variable "service-name" {}
-variable "service-port" { type = number }
+variable "service_name" {}
+variable "service_port" { type = number }
 locals {
-  service-name = var.service-name
-  service-port = var.service-port
+  service_name = var.service_name
+  service_port = var.service_port
 }
 
-variable "release-name" {}
+variable "release_name" {}
 locals {
-  release-name = var.release-name
+  release_name = var.release_name
 }
 
 locals {
-  image-url = "${docker_registry_image.logstash.name}@${docker_registry_image.logstash.sha256_digest}"
+  image_url = "${docker_registry_image.logstash.name}@${docker_registry_image.logstash.sha256_digest}"
 }
 
 resource "helm_release" "logstash" {
-  name = local.release-name
+  name = local.release_name
 
   chart = abspath("${path.module}/logstash-chart")
 
-  namespace = local.namespace-name
+  namespace = local.namespace_name
 
   values = [
     yamlencode({
-      serviceName      = local.service-name
-      servicePort      = local.service-port
-      imageUrl         = local.image-url
-      storageClassName = local.storage_class-name
+      serviceName      = local.service_name
+      servicePort      = local.service_port
+      imageUrl         = local.image_url
+      storageClassName = local.storage_class_name
     })
   ]
 }
