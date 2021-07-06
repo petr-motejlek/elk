@@ -52,9 +52,10 @@ provider "kubernetes" {
 }
 
 locals {
-  ca-common_name     = "elk-ca"
-  ca-valid-hours     = 24 * 365
-  ca-public_key-path = abspath("${path.module}/ca.pem")
+  ca-common_name          = "elk-ca"
+  ca-valid-hours          = 24 * 365
+  ca-public_key-path      = abspath("${path.module}/ca.pem")
+  ca-subjects-valid-hours = 24 * 365
 }
 
 module "ca" {
@@ -63,6 +64,9 @@ module "ca" {
   ca-common_name     = local.ca-common_name
   ca-valid-hours     = local.ca-valid-hours
   ca-public_key-path = local.ca-public_key-path
+
+  subjects_common_names = [local.registry-common_name]
+  subjects_valid_hours  = local.ca-subjects-valid-hours
 }
 
 locals {
@@ -90,7 +94,6 @@ module "k8s" {
   registry-tokens     = [local.dockerio-token, " "]
   registry-isdefaults = [true, false]
 
-  ca-public_key-hash        = module.ca.public_key-hash
   ca-public_key-path        = module.ca.public_key-path
   ca-public_key-remote-path = local.k8s-ca-public_key-remote-path
 
@@ -178,11 +181,15 @@ module "longhorn" {
 locals {
   registry-common_name        = "${local.registry-service-name}.${local.registry-namespace-name}.${local.exdns-domain}"
   registry-namespace-name     = "registry"
-  registry-cert-valid-hours   = 24 * 365
   registry-storage_class-name = module.longhorn.storage_class-name
   registry-service-name       = "registry"
   registry-service-port       = 443
   registry-release-name       = "registry"
+}
+
+locals {
+  registry_tls_key_pem = module.ca.subjects_tls_key_pems[local.registry-common_name]
+  registry_tls_crt_pem = module.ca.subjects_tls_crt_pems[local.registry-common_name]
 }
 
 module "registry" {
@@ -191,17 +198,13 @@ module "registry" {
   module.ca]
   source = "./registry"
 
-  common_name              = local.registry-common_name
-  ca-private_key-pem       = module.ca.private_key-pem
-  ca-private_key-algorithm = module.ca.private_key-algorithm
-  ca-public_key-pem        = module.ca.public_key-pem
-
   storage_class-name = local.registry-storage_class-name
   namespace-name     = local.registry-namespace-name
-  cert-valid-hours   = local.registry-cert-valid-hours
   service-name       = local.registry-service-name
   service-port       = local.registry-service-port
   release-name       = local.registry-release-name
+  tls_key_pem        = local.registry_tls_key_pem
+  tls_crt_pem        = local.registry_tls_crt_pem
 }
 
 variable "elasticsearch-replicas-count" {
