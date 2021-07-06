@@ -182,6 +182,7 @@ locals {
   registry-storage_class-name = module.longhorn.storage_class-name
   registry-service-name       = "registry"
   registry-service-port       = 443
+  registry-release-name       = "registry"
 }
 
 module "registry" {
@@ -200,6 +201,7 @@ module "registry" {
   cert-valid-hours   = local.registry-cert-valid-hours
   service-name       = local.registry-service-name
   service-port       = local.registry-service-port
+  release-name       = local.registry-release-name
 }
 
 variable "elasticsearch-replicas-count" {
