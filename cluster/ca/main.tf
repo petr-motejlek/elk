@@ -3,13 +3,13 @@ resource "tls_private_key" "ca" {
   rsa_bits  = 4096
 }
 
-variable "ca-common_name" {}
-variable "ca-valid-hours" {
+variable "ca_common_name" {}
+variable "ca_valid_hours" {
   type = number
 }
 locals {
-  ca-common_name = var.ca-common_name
-  ca-valid-hours = var.ca-valid-hours
+  ca_common_name = var.ca_common_name
+  ca_valid_hours = var.ca_valid_hours
 }
 
 resource "tls_self_signed_cert" "ca" {
@@ -17,10 +17,10 @@ resource "tls_self_signed_cert" "ca" {
   private_key_pem = tls_private_key.ca.private_key_pem
 
   subject {
-    common_name = local.ca-common_name
+    common_name = local.ca_common_name
   }
 
-  validity_period_hours = local.ca-valid-hours
+  validity_period_hours = local.ca_valid_hours
 
   is_ca_certificate = true
 
@@ -31,14 +31,14 @@ resource "tls_self_signed_cert" "ca" {
   ]
 }
 
-variable "ca-public_key-path" {}
+variable "ca_public_key_path" {}
 locals {
-  ca-public_key-path = var.ca-public_key-path
+  ca_public_key_path = var.ca_public_key_path
 }
 
 resource "local_file" "ca" {
   content  = tls_self_signed_cert.ca.cert_pem
-  filename = local.ca-public_key-path
+  filename = local.ca_public_key_path
 }
 
 resource "null_resource" "ca" {
@@ -114,23 +114,23 @@ output "subjects_tls_crt_pems" {
   value = { for idx, cn in local.subjects_common_names : cn => tls_locally_signed_cert.subjects[idx].cert_pem }
 }
 
-output "private_key-pem" {
+output "private_key_pem" {
   value     = tls_private_key.ca.private_key_pem
   sensitive = true
 }
 
-output "private_key-algorithm" {
+output "private_key_algorithm" {
   value = tls_private_key.ca.algorithm
 }
 
-output "public_key-pem" {
+output "public_key_pem" {
   value = tls_self_signed_cert.ca.cert_pem
 }
 
-output "public_key-hash" {
+output "public_key_hash" {
   value = md5(local_file.ca.content)
 }
 
-output "public_key-path" {
+output "public_key_path" {
   value = local_file.ca.filename
 }

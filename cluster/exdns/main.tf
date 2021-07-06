@@ -1,32 +1,32 @@
-variable "namespace-name" {}
+variable "namespace_name" {}
 locals {
-  namespace-name = var.namespace-name
+  namespace_name = var.namespace_name
 }
 
 resource "kubernetes_namespace" "exdns" {
   metadata {
-    name = local.namespace-name
+    name = local.namespace_name
   }
 }
 
-variable "release-name" {}
-variable "chart-repository" {}
-variable "chart-name" {}
+variable "release_name" {}
+variable "chart_repository" {}
+variable "chart_name" {}
 variable "domain" {}
 variable "ip" {}
 locals {
-  release-name     = var.release-name
-  chart-repository = var.chart-repository
-  chart-name       = var.chart-name
+  release_name     = var.release_name
+  chart_repository = var.chart_repository
+  chart_name       = var.chart_name
   domain           = var.domain
   ip               = var.ip
 }
 
 resource "helm_release" "exdns" {
-  name = local.release-name
+  name = local.release_name
 
-  repository = local.chart-repository
-  chart      = local.chart-name
+  repository = local.chart_repository
+  chart      = local.chart_name
 
   namespace = kubernetes_namespace.exdns.metadata[0].name
 

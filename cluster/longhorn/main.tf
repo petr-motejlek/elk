@@ -1,47 +1,47 @@
-variable "namespace-name" {}
+variable "namespace_name" {}
 locals {
-  namespace-name = var.namespace-name
+  namespace_name = var.namespace_name
 }
 
 resource "kubernetes_namespace" "longhorn" {
   metadata {
-    name = local.namespace-name
+    name = local.namespace_name
   }
 }
 
-variable "release-name" {}
+variable "release_name" {}
 locals {
-  release-name = var.release-name
+  release_name = var.release_name
 }
 
-variable "storage_class-name" {}
+variable "storage_class_name" {}
 locals {
-  storage_class-name = var.storage_class-name
+  storage_class_name = var.storage_class_name
 }
 
-variable "replicas-count" {
+variable "replicas_count" {
   type = number
 }
 locals {
-  replicas-count = var.replicas-count
+  replicas_count = var.replicas_count
 }
 
-variable "chart-url" {}
+variable "chart_url" {}
 locals {
-  chart-url = var.chart-url
+  chart_url = var.chart_url
 }
 
 resource "helm_release" "longhorn" {
-  name      = local.release-name
-  chart     = local.chart-url
+  name      = local.release_name
+  chart     = local.chart_url
   namespace = kubernetes_namespace.longhorn.metadata[0].name
   values = [
     yamlencode({
       persistence = {
-        defaultClassReplicaCount = local.replicas-count
+        defaultClassReplicaCount = local.replicas_count
       }
       defaultSettings = {
-        defaultReplicaCount                  = local.replicas-count
+        defaultReplicaCount                  = local.replicas_count
         allowNodeDrainWithLastHealthyReplica = true
         guaranteedEngineCPU                  = "250m"
         guaranteedEngineManagerCPU           = "250m"
@@ -56,10 +56,10 @@ data "kubernetes_storage_class" "longhorn" {
   helm_release.longhorn]
 
   metadata {
-    name = local.storage_class-name
+    name = local.storage_class_name
   }
 }
 
-output "storage_class-name" {
+output "storage_class_name" {
   value = data.kubernetes_storage_class.longhorn.metadata.0.name
 }

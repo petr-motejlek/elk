@@ -1,37 +1,37 @@
-variable "dockerio-user" {
+variable "dockerio_user" {
   sensitive = true
 }
-variable "dockerio-token" {
+variable "dockerio_token" {
   sensitive = true
 }
 locals {
-  dockerio-url   = "docker.io"
-  dockerio-user  = var.dockerio-user
-  dockerio-token = var.dockerio-token
+  dockerio_url   = "docker.io"
+  dockerio_user  = var.dockerio_user
+  dockerio_token = var.dockerio_token
 
-  internal_registry-url   = local.registry-common_name
-  internal_registry-user  = " "
-  internal_registry-token = " "
+  internal_registry_url   = local.registry_common_name
+  internal_registry_user  = " "
+  internal_registry_token = " "
 }
 
 locals {
-  registry-auths = [
+  registry_auths = [
     {
-      address  = local.internal_registry-url
-      username = local.internal_registry-user
-      password = local.internal_registry-token
+      address  = local.internal_registry_url
+      username = local.internal_registry_user
+      password = local.internal_registry_token
     },
     {
-      address  = local.dockerio-url
-      username = local.dockerio-user
-      password = local.dockerio-token
+      address  = local.dockerio_url
+      username = local.dockerio_user
+      password = local.dockerio_token
     }
   ]
 }
 
 provider "docker" {
   dynamic "registry_auth" {
-    for_each = local.registry-auths
+    for_each = local.registry_auths
 
     content {
       address  = registry_auth.value.address
@@ -43,42 +43,42 @@ provider "docker" {
 
 provider "helm" {
   kubernetes {
-    config_path = module.k8s.kubeconfig-path
+    config_path = module.k8s.kubeconfig_path
   }
 }
 
 provider "kubernetes" {
-  config_path = module.k8s.kubeconfig-path
+  config_path = module.k8s.kubeconfig_path
 }
 
 locals {
-  ca-common_name          = "elk-ca"
-  ca-valid-hours          = 24 * 365
-  ca-public_key-path      = abspath("${path.module}/ca.pem")
-  ca-subjects-valid-hours = 24 * 365
+  ca_common_name          = "elk-ca"
+  ca_valid_hours          = 24 * 365
+  ca_public_key_path      = abspath("${path.module}/ca.pem")
+  ca_subjects_valid_hours = 24 * 365
 }
 
 module "ca" {
   source = "./ca"
 
-  ca-common_name     = local.ca-common_name
-  ca-valid-hours     = local.ca-valid-hours
-  ca-public_key-path = local.ca-public_key-path
+  ca_common_name     = local.ca_common_name
+  ca_valid_hours     = local.ca_valid_hours
+  ca_public_key_path = local.ca_public_key_path
 
-  subjects_common_names = [local.registry-common_name]
-  subjects_valid_hours  = local.ca-subjects-valid-hours
+  subjects_common_names = [local.registry_common_name]
+  subjects_valid_hours  = local.ca_subjects_valid_hours
 }
 
 locals {
-  k8s-kubeconfig-path = abspath("${path.root}/kubeconfig.yaml")
-  k8s-cluster-name    = local.exdns-domain
-  k8s-node-names      = ["node0", "node1"]
-  k8s-node-ext_ips    = ["192.168.0.10", "192.168.0.11"]
-  k8s-node-int_ips = [
+  k8s_kubeconfig_path = abspath("${path.root}/kubeconfig.yaml")
+  k8s_cluster_name    = local.exdns_domain
+  k8s_node_names      = ["node0", "node1"]
+  k8s_node_ext_ips    = ["192.168.0.10", "192.168.0.11"]
+  k8s_node_int_ips = [
     "192.168.255.10",
   "192.168.255.11"]
-  k8s-release-name              = "k8s"
-  k8s-ca-public_key-remote-path = "/home/vagrant/ca.pem"
+  k8s_release_name              = "k8s"
+  k8s_ca_public_key_remote_path = "/home/vagrant/ca.pem"
 }
 
 module "k8s" {
@@ -86,31 +86,31 @@ module "k8s" {
   module.ca]
   source = "./k8s"
 
-  cluster-name    = local.k8s-cluster-name
-  kubeconfig-path = local.k8s-kubeconfig-path
+  cluster_name    = local.k8s_cluster_name
+  kubeconfig_path = local.k8s_kubeconfig_path
 
-  registry-urls       = [local.dockerio-url, local.internal_registry-url]
-  registry-users      = [local.dockerio-user, " "]
-  registry-tokens     = [local.dockerio-token, " "]
-  registry-isdefaults = [true, false]
+  registry_urls       = [local.dockerio_url, local.internal_registry_url]
+  registry_users      = [local.dockerio_user, " "]
+  registry_tokens     = [local.dockerio_token, " "]
+  registry_isdefaults = [true, false]
 
-  ca-public_key-path        = module.ca.public_key-path
-  ca-public_key-remote-path = local.k8s-ca-public_key-remote-path
+  ca_public_key_path        = module.ca.public_key_path
+  ca_public_key_remote_path = local.k8s_ca_public_key_remote_path
 
-  node-names   = local.k8s-node-names
-  node-ext_ips = local.k8s-node-ext_ips
-  node-int_ips = local.k8s-node-int_ips
+  node_names   = local.k8s_node_names
+  node_ext_ips = local.k8s_node_ext_ips
+  node_int_ips = local.k8s_node_int_ips
 }
 
-variable "metallb-chart-url" {
+variable "metallb_chart_url" {
   default = "https://charts.bitnami.com/bitnami/metallb-2.4.3.tgz"
 }
 locals {
-  metallb-namespace-name = "metallb-system"
-  metallb-release-name   = "metallb"
-  metallb-pool-names     = ["default", "exdns"]
-  metallb-pool-ranges    = ["192.168.0.20-192.168.0.29", "${local.exdns-ip}-${local.exdns-ip}"]
-  metallb-chart-url      = var.metallb-chart-url
+  metallb_namespace_name = "metallb-system"
+  metallb_release_name   = "metallb"
+  metallb_pool_names     = ["default", "exdns"]
+  metallb_pool_ranges    = ["192.168.0.20-192.168.0.29", "${local.exdns_ip}-${local.exdns_ip}"]
+  metallb_chart_url      = var.metallb_chart_url
 }
 
 module "metallb" {
@@ -118,24 +118,24 @@ module "metallb" {
   module.k8s]
   source = "./metallb"
 
-  chart-url      = local.metallb-chart-url
-  namespace-name = local.metallb-namespace-name
-  release-name   = local.metallb-release-name
+  chart_url      = local.metallb_chart_url
+  namespace_name = local.metallb_namespace_name
+  release_name   = local.metallb_release_name
 
-  pool-names  = local.metallb-pool-names
-  pool-ranges = local.metallb-pool-ranges
+  pool_names  = local.metallb_pool_names
+  pool_ranges = local.metallb_pool_ranges
 }
 
 variable "domain" {
   default = "cls.local"
 }
 locals {
-  exdns-namespace-name   = "exdns-system"
-  exdns-release-name     = "exdns"
-  exdns-chart-repository = "https://ori-edge.github.io/k8s_gateway/"
-  exdns-chart-name       = "k8s-gateway"
-  exdns-domain           = var.domain
-  exdns-ip               = "192.168.0.32"
+  exdns_namespace_name   = "exdns-system"
+  exdns_release_name     = "exdns"
+  exdns_chart_repository = "https://ori-edge.github.io/k8s_gateway/"
+  exdns_chart_name       = "k8s-gateway"
+  exdns_domain           = var.domain
+  exdns_ip               = "192.168.0.32"
 }
 
 module "exdns" {
@@ -143,27 +143,27 @@ module "exdns" {
   module.metallb]
   source = "./exdns"
 
-  namespace-name   = local.exdns-namespace-name
-  chart-name       = local.exdns-chart-name
-  chart-repository = local.exdns-chart-repository
-  domain           = local.exdns-domain
-  ip               = local.exdns-ip
-  release-name     = local.exdns-release-name
+  namespace_name   = local.exdns_namespace_name
+  chart_name       = local.exdns_chart_name
+  chart_repository = local.exdns_chart_repository
+  domain           = local.exdns_domain
+  ip               = local.exdns_ip
+  release_name     = local.exdns_release_name
 }
 
-variable "longhorn-replicas-count" {
+variable "longhorn_replicas_count" {
   type    = number
   default = 2
 }
-variable "longhorn-chart-url" {
+variable "longhorn_chart_url" {
   default = "https://github.com/longhorn/charts/releases/download/longhorn-1.1.0/longhorn-1.1.0.tgz"
 }
 locals {
-  longhorn-namespace-name     = "longhorn-system"
-  longhorn-release-name       = "longhorn"
-  longhorn-storage_class-name = "longhorn"
-  longhorn-replicas-count     = max((length(local.k8s-node-names) >= 2 ? 2 : 1), var.longhorn-replicas-count)
-  longhorn-chart-url          = var.longhorn-chart-url
+  longhorn_namespace_name     = "longhorn-system"
+  longhorn_release_name       = "longhorn"
+  longhorn_storage_class_name = "longhorn"
+  longhorn_replicas_count     = max((length(local.k8s_node_names) >= 2 ? 2 : 1), var.longhorn_replicas_count)
+  longhorn_chart_url          = var.longhorn_chart_url
 }
 
 module "longhorn" {
@@ -171,25 +171,25 @@ module "longhorn" {
   module.metallb]
   source = "./longhorn"
 
-  chart-url          = local.longhorn-chart-url
-  namespace-name     = local.longhorn-namespace-name
-  release-name       = local.longhorn-release-name
-  storage_class-name = local.longhorn-storage_class-name
-  replicas-count     = local.longhorn-replicas-count
+  chart_url          = local.longhorn_chart_url
+  namespace_name     = local.longhorn_namespace_name
+  release_name       = local.longhorn_release_name
+  storage_class_name = local.longhorn_storage_class_name
+  replicas_count     = local.longhorn_replicas_count
 }
 
 locals {
-  registry-common_name        = "${local.registry-service-name}.${local.registry-namespace-name}.${local.exdns-domain}"
-  registry-namespace-name     = "registry"
-  registry-storage_class-name = module.longhorn.storage_class-name
-  registry-service-name       = "registry"
-  registry-service-port       = 443
-  registry-release-name       = "registry"
+  registry_common_name        = "${local.registry_service_name}.${local.registry_namespace_name}.${local.exdns_domain}"
+  registry_namespace_name     = "registry"
+  registry_storage_class_name = module.longhorn.storage_class_name
+  registry_service_name       = "registry"
+  registry_service_port       = 443
+  registry_release_name       = "registry"
 }
 
 locals {
-  registry_tls_key_pem = module.ca.subjects_tls_key_pems[local.registry-common_name]
-  registry_tls_crt_pem = module.ca.subjects_tls_crt_pems[local.registry-common_name]
+  registry_tls_key_pem = module.ca.subjects_tls_key_pems[local.registry_common_name]
+  registry_tls_crt_pem = module.ca.subjects_tls_crt_pems[local.registry_common_name]
 }
 
 module "registry" {
@@ -198,37 +198,37 @@ module "registry" {
   module.ca]
   source = "./registry"
 
-  storage_class-name = local.registry-storage_class-name
-  namespace-name     = local.registry-namespace-name
-  service-name       = local.registry-service-name
-  service-port       = local.registry-service-port
-  release-name       = local.registry-release-name
+  storage_class_name = local.registry_storage_class_name
+  namespace_name     = local.registry_namespace_name
+  service_name       = local.registry_service_name
+  service_port       = local.registry_service_port
+  release_name       = local.registry_release_name
   tls_key_pem        = local.registry_tls_key_pem
   tls_crt_pem        = local.registry_tls_crt_pem
 }
 
-variable "elasticsearch-replicas-count" {
+variable "elasticsearch_replicas_count" {
   default = 3
   type    = number
 }
 locals {
-  elk-namespace-name = "elk"
+  elk_namespace_name = "elk"
 
-  elasticsearch-image-name     = "elasticsearch"
-  elasticsearch-service-name   = "elasticsearch"
-  elasticsearch-service-port   = 9200
-  elasticsearch-replicas-count = var.elasticsearch-replicas-count
-  elasticsearch-release-name   = "elasticsearch"
+  elasticsearch_image_name     = "elasticsearch"
+  elasticsearch_service_name   = "elasticsearch"
+  elasticsearch_service_port   = 9200
+  elasticsearch_replicas_count = var.elasticsearch_replicas_count
+  elasticsearch_release_name   = "elasticsearch"
 
-  logstash-image-name   = "logstash"
-  logstash-service-name = "logstash"
-  logstash-service-port = 5042
-  logstash-release-name = "logstash"
+  logstash_image_name   = "logstash"
+  logstash_service_name = "logstash"
+  logstash_service_port = 5042
+  logstash_release_name = "logstash"
 
-  kibana-image-name   = "kibana"
-  kibana-service-name = "kibana"
-  kibana-service-port = 5601
-  kibana-release-name = "kibana"
+  kibana_image_name   = "kibana"
+  kibana_service_name = "kibana"
+  kibana_service_port = 5601
+  kibana_release_name = "kibana"
 }
 
 module "elk" {
@@ -236,25 +236,25 @@ module "elk" {
   module.registry]
   source = "./elk"
 
-  namespace-name     = local.elk-namespace-name
-  storage_class-name = module.longhorn.storage_class-name
+  namespace_name     = local.elk_namespace_name
+  storage_class_name = module.longhorn.storage_class_name
 
-  elasticsearch-image-registry-url = local.internal_registry-url
-  elasticsearch-image-name         = local.elasticsearch-image-name
-  elasticsearch-service-name       = local.elasticsearch-service-name
-  elasticsearch-service-port       = local.elasticsearch-service-port
-  elasticsearch-replicas-count     = local.elasticsearch-replicas-count
-  elasticsearch-release-name       = local.elasticsearch-release-name
+  elasticsearch_image_registry_url = local.internal_registry_url
+  elasticsearch_image_name         = local.elasticsearch_image_name
+  elasticsearch_service_name       = local.elasticsearch_service_name
+  elasticsearch_service_port       = local.elasticsearch_service_port
+  elasticsearch_replicas_count     = local.elasticsearch_replicas_count
+  elasticsearch_release_name       = local.elasticsearch_release_name
 
-  logstash-image-registry-url = local.internal_registry-url
-  logstash-image-name         = local.logstash-image-name
-  logstash-service-name       = local.logstash-service-name
-  logstash-service-port       = local.logstash-service-port
-  logstash-release-name       = local.logstash-release-name
+  logstash_image_registry_url = local.internal_registry_url
+  logstash_image_name         = local.logstash_image_name
+  logstash_service_name       = local.logstash_service_name
+  logstash_service_port       = local.logstash_service_port
+  logstash_release_name       = local.logstash_release_name
 
-  kibana-image-registry-url = local.internal_registry-url
-  kibana-image-name         = local.kibana-image-name
-  kibana-service-name       = local.kibana-service-name
-  kibana-service-port       = local.kibana-service-port
-  kibana-release-name       = local.kibana-release-name
+  kibana_image_registry_url = local.internal_registry_url
+  kibana_image_name         = local.kibana_image_name
+  kibana_service_name       = local.kibana_service_name
+  kibana_service_port       = local.kibana_service_port
+  kibana_release_name       = local.kibana_release_name
 }
