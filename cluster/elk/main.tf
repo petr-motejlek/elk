@@ -23,12 +23,14 @@ variable "elasticsearch-service-name" {}
 variable "elasticsearch-replicas-count" {
   type = number
 }
+variable "elasticsearch-release-name" {}
 locals {
   elasticsearch-image-registry-url = var.elasticsearch-image-registry-url
   elasticsearch-image-name         = var.elasticsearch-image-name
   elasticsearch-service-port       = var.elasticsearch-service-port
   elasticsearch-service-name       = var.elasticsearch-service-name
   elasticsearch-replicas-count     = var.elasticsearch-replicas-count
+  elasticsearch-release-name       = var.elasticsearch-release-name
 }
 
 module "elasticsearch" {
@@ -41,6 +43,7 @@ module "elasticsearch" {
   service-name       = local.elasticsearch-service-name
   service-port       = local.elasticsearch-service-port
   replicas-count     = local.elasticsearch-replicas-count
+  release-name       = local.elasticsearch-release-name
 }
 
 variable "logstash-image-registry-url" {}
@@ -49,11 +52,13 @@ variable "logstash-service-name" {}
 variable "logstash-service-port" {
   type = number
 }
+variable "logstash-release-name" {}
 locals {
   logstash-image-registry-url = var.logstash-image-registry-url
   logstash-image-name         = var.logstash-image-name
   logstash-service-name       = var.logstash-service-name
   logstash-service-port       = var.logstash-service-port
+  logstash-release-name       = var.logstash-release-name
 }
 
 module "logstash" {
@@ -67,6 +72,7 @@ module "logstash" {
   image-name         = local.logstash-image-name
   service-name       = local.logstash-service-name
   service-port       = local.logstash-service-port
+  release-name       = local.logstash-release-name
 }
 
 variable "kibana-image-registry-url" {}
@@ -75,11 +81,13 @@ variable "kibana-service-name" {}
 variable "kibana-service-port" {
   type = number
 }
+variable "kibana-release-name" {}
 locals {
   kibana-image-registry-url = var.kibana-image-registry-url
   kibana-image-name         = var.kibana-image-name
   kibana-service-name       = var.kibana-service-name
   kibana-service-port       = var.kibana-service-port
+  kibana-release-name       = var.kibana-release-name
 }
 
 module "kibana" {
@@ -93,4 +101,5 @@ module "kibana" {
   image-name         = local.kibana-image-name
   service-name       = local.kibana-service-name
   service-port       = local.kibana-service-port
+  release-name       = local.kibana-release-name
 }

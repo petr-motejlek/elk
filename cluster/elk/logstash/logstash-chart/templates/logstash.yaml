@@ -1,0 +1,81 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    service.alpha.kubernetes.io/tolerate-unready-endpoints: "true"
+  labels:
+    app: logstash
+  name: logstash-headless
+spec:
+  clusterIP: None
+  ports:
+    - port: 9601
+      protocol: TCP
+      targetPort: 9601
+  publishNotReadyAddresses: true
+  selector:
+    app: logstash
+  type: ClusterIP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: logstash
+  name: {{ include "serviceName" . | quote }}
+spec:
+  ports:
+    - port: {{ include "servicePort" . }}
+      protocol: TCP
+      targetPort: 9601
+  selector:
+    app: logstash
+  type: ClusterIP
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: logstash
+spec:
+  podManagementPolicy: Parallel
+  replicas: {{ include "replicasCount" . }}
+  selector:
+    matchLabels:
+      app: logstash
+  serviceName: logstash-headless
+  template:
+    metadata:
+      labels:
+        app: logstash
+    spec:
+      containers:
+        - image: {{ include "imageUrl" . | quote }}
+          name: logstash
+          ports:
+            - containerPort: 9601
+              protocol: TCP
+          resources:
+            limits:
+              memory: 2Gi
+            requests:
+              memory: 2Gi
+          volumeMounts:
+            - mountPath: /var/lib/logstash
+              name: logstash-data
+      securityContext:
+        fsGroup: 999
+        runAsGroup: 999
+        runAsUser: 999
+  volumeClaimTemplates:
+    - apiVersion: v1
+      kind: PersistentVolumeClaim
+      metadata:
+        name: logstash-data
+      spec:
+        accessModes:
+          - ReadWriteOnce
+        resources:
+          requests:
+            storage: 8Gi
+        storageClassName: {{ include "storageClassName" . | quote }}

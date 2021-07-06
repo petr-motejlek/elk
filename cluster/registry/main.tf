@@ -67,100 +67,6 @@ resource "tls_locally_signed_cert" "registry" {
   ]
 }
 
-resource "kubernetes_secret" "registry-tls" {
-  metadata {
-    name      = "registry-tls"
-    namespace = kubernetes_namespace.registry.metadata[0].name
-  }
-  data = {
-    key = tls_private_key.registry.private_key_pem
-    crt = tls_locally_signed_cert.registry.cert_pem
-  }
-}
-
-resource "kubernetes_stateful_set" "registry" {
-  timeouts {
-    create = "30m"
-  }
-
-  metadata {
-    name      = "registry"
-    namespace = kubernetes_namespace.registry.metadata[0].name
-    labels = {
-      app = "registry"
-    }
-  }
-  spec {
-    service_name = kubernetes_service.registry.metadata.0.name
-    replicas     = 1
-    selector {
-      match_labels = kubernetes_service.registry.spec.0.selector
-    }
-
-    template {
-      metadata {
-        labels = kubernetes_service.registry.spec.0.selector
-      }
-      spec {
-        container {
-          image = "registry:2"
-          name  = "registry"
-          env {
-            name  = "REGISTRY_HTTP_TLS_CERTIFICATE"
-            value = "/run/secrets/registry-tls/crt"
-          }
-          env {
-            name  = "REGISTRY_HTTP_TLS_KEY"
-            value = "/run/secrets/registry-tls/key"
-          }
-          env {
-            name  = "REGISTRY_TLS_HASH"
-            value = md5(yamlencode(kubernetes_secret.registry-tls.data))
-          }
-          volume_mount {
-            name       = "registry-vol"
-            mount_path = "/var/lib/registry"
-          }
-          volume_mount {
-            name       = "registry-tls"
-            mount_path = "/run/secrets/registry-tls"
-          }
-          resources {
-            requests = {
-              cpu = "0.25"
-            }
-            limits = {
-              cpu = "0.25"
-            }
-          }
-        }
-        volume {
-          name = "registry-tls"
-          secret {
-            default_mode = "0600"
-            secret_name  = "registry-tls"
-          }
-        }
-      }
-    }
-    volume_claim_template {
-      metadata {
-        name = "registry-vol"
-      }
-      spec {
-        access_modes = [
-        "ReadWriteOnce"]
-        storage_class_name = local.storage_class-name
-        resources {
-          requests = {
-            storage = "8Gi"
-          }
-        }
-      }
-    }
-  }
-}
-
 variable "service-name" {}
 variable "service-port" {
   type = number
@@ -170,20 +76,30 @@ locals {
   service-port = var.service-port
 }
 
-resource "kubernetes_service" "registry" {
-  metadata {
-    name      = local.service-name
-    namespace = kubernetes_namespace.registry.metadata[0].name
-  }
-  spec {
-    selector = {
-      app = "registry"
-    }
-    type = "LoadBalancer"
-    port {
-      port        = local.service-port
-      target_port = 5000
-    }
-  }
+variable "release-name" {}
+locals {
+  release-name = var.release-name
 }
 
+locals {
+  image-url = "registry:2"
+}
+
+resource "helm_release" "registry" {
+  name = local.release-name
+
+  chart = abspath("${path.module}/registry-chart")
+
+  namespace = local.namespace-name
+
+  values = [
+    yamlencode({
+      serviceName      = local.service-name
+      servicePort      = local.service-port
+      imageUrl         = local.image-url
+      storageClassName = local.storage_class-name
+      tlsKeyPem        = tls_private_key.registry.private_key_pem
+      tlsCrtPem        = tls_locally_signed_cert.registry.cert_pem
+    })
+  ]
+}

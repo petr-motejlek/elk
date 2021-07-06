@@ -182,6 +182,7 @@ locals {
   registry-storage_class-name = module.longhorn.storage_class-name
   registry-service-name       = "registry"
   registry-service-port       = 443
+  registry-release-name       = "registry"
 }
 
 module "registry" {
@@ -200,6 +201,7 @@ module "registry" {
   cert-valid-hours   = local.registry-cert-valid-hours
   service-name       = local.registry-service-name
   service-port       = local.registry-service-port
+  release-name       = local.registry-release-name
 }
 
 variable "elasticsearch-replicas-count" {
@@ -213,14 +215,17 @@ locals {
   elasticsearch-service-name   = "elasticsearch"
   elasticsearch-service-port   = 9200
   elasticsearch-replicas-count = var.elasticsearch-replicas-count
+  elasticsearch-release-name   = "elasticsearch"
 
   logstash-image-name   = "logstash"
   logstash-service-name = "logstash"
   logstash-service-port = 5042
+  logstash-release-name = "logstash"
 
   kibana-image-name   = "kibana"
   kibana-service-name = "kibana"
   kibana-service-port = 5601
+  kibana-release-name = "kibana"
 }
 
 module "elk" {
@@ -236,14 +241,17 @@ module "elk" {
   elasticsearch-service-name       = local.elasticsearch-service-name
   elasticsearch-service-port       = local.elasticsearch-service-port
   elasticsearch-replicas-count     = local.elasticsearch-replicas-count
+  elasticsearch-release-name       = local.elasticsearch-release-name
 
   logstash-image-registry-url = local.internal_registry-url
   logstash-image-name         = local.logstash-image-name
   logstash-service-name       = local.logstash-service-name
   logstash-service-port       = local.logstash-service-port
+  logstash-release-name       = local.logstash-release-name
 
   kibana-image-registry-url = local.internal_registry-url
   kibana-image-name         = local.kibana-image-name
   kibana-service-name       = local.kibana-service-name
   kibana-service-port       = local.kibana-service-port
+  kibana-release-name       = local.kibana-release-name
 }
