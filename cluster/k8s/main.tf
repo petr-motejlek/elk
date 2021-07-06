@@ -19,12 +19,10 @@ locals {
   }]
 }
 
-variable "ca-public_key-hash" {}
 variable "ca-public_key-path" {}
 variable "ca-public_key-remote-path" {}
 locals {
   ca-public_key-remote-path = var.ca-public_key-remote-path
-  ca-public_key-hash        = var.ca-public_key-hash
   ca-public_key-path        = var.ca-public_key-path
 }
 
