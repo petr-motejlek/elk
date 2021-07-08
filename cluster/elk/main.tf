@@ -100,6 +100,17 @@ locals {
   kibana_release_name       = var.kibana_release_name
 }
 
+module "kibana_image" {
+  source = "./kibana-image"
+
+  image_registry_url = local.kibana_image_registry_url
+  image_name         = local.kibana_image_name
+}
+
+locals {
+  kibana_image_url = module.kibana_image.image_url
+}
+
 module "kibana" {
   depends_on = [module.elasticsearch]
 
@@ -107,9 +118,8 @@ module "kibana" {
 
   namespace_name     = kubernetes_namespace.elk.metadata.0.name
   storage_class_name = local.storage_class_name
-  image_registry_url = local.kibana_image_registry_url
-  image_name         = local.kibana_image_name
   service_name       = local.kibana_service_name
   service_port       = local.kibana_service_port
   release_name       = local.kibana_release_name
+  image_url          = local.kibana_image_url
 }
