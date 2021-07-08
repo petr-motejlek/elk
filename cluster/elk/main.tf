@@ -33,17 +33,27 @@ locals {
   elasticsearch_release_name       = var.elasticsearch_release_name
 }
 
+module "elasticsearch_image" {
+  source = "./elasticsearch-image"
+
+  image_registry_url = local.elasticsearch_image_registry_url
+  image_name         = local.elasticsearch_image_name
+}
+
+locals {
+  elasticsearch_image_url = module.elasticsearch_image.image_url
+}
+
 module "elasticsearch" {
   source = "./elasticsearch"
 
   namespace_name     = kubernetes_namespace.elk.metadata.0.name
   storage_class_name = local.storage_class_name
-  image_registry_url = local.elasticsearch_image_registry_url
-  image_name         = local.elasticsearch_image_name
   service_name       = local.elasticsearch_service_name
   service_port       = local.elasticsearch_service_port
   replicas_count     = local.elasticsearch_replicas_count
   release_name       = local.elasticsearch_release_name
+  image_url          = local.elasticsearch_image_url
 }
 
 variable "logstash_image_registry_url" {}
