@@ -61,12 +61,19 @@ locals {
 module "ca" {
   source = "./ca"
 
-  ca_common_name     = local.ca_common_name
-  ca_valid_hours     = local.ca_valid_hours
-  ca_public_key_path = local.ca_public_key_path
+  ca_common_name = local.ca_common_name
+  ca_valid_hours = local.ca_valid_hours
 
   subjects_common_names = [local.registry_common_name]
   subjects_valid_hours  = local.ca_subjects_valid_hours
+}
+
+locals {
+  ca_public_key_pem = module.ca.public_key_pem
+}
+
+output "ca_public_key_pem" {
+  value = local.ca_public_key_pem
 }
 
 locals {
@@ -77,8 +84,7 @@ locals {
   k8s_node_int_ips = [
     "192.168.255.10",
   "192.168.255.11"]
-  k8s_release_name              = "k8s"
-  k8s_ca_public_key_remote_path = "/home/vagrant/ca.pem"
+  k8s_release_name = "k8s"
 }
 
 module "k8s" {
@@ -94,8 +100,7 @@ module "k8s" {
   registry_tokens     = [local.dockerio_token, " "]
   registry_isdefaults = [true, false]
 
-  ca_public_key_path        = module.ca.public_key_path
-  ca_public_key_remote_path = local.k8s_ca_public_key_remote_path
+  ca_public_key_pem = local.ca_public_key_pem
 
   node_names   = local.k8s_node_names
   node_ext_ips = local.k8s_node_ext_ips
@@ -212,7 +217,8 @@ variable "elasticsearch_replicas_count" {
   type    = number
 }
 locals {
-  elk_namespace_name = "elk"
+  elk_namespace_name     = "elk"
+  elk_storage_class_name = module.longhorn.storage_class_name
 
   elasticsearch_image_name     = "elasticsearch"
   elasticsearch_service_name   = "elasticsearch"
@@ -237,7 +243,7 @@ module "elk" {
   source = "./elk"
 
   namespace_name     = local.elk_namespace_name
-  storage_class_name = module.longhorn.storage_class_name
+  storage_class_name = local.elk_storage_class_name
 
   elasticsearch_image_registry_url = local.internal_registry_url
   elasticsearch_image_name         = local.elasticsearch_image_name

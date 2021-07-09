@@ -19,11 +19,9 @@ locals {
   }]
 }
 
-variable "ca_public_key_path" {}
-variable "ca_public_key_remote_path" {}
+variable "ca_public_key_pem" {}
 locals {
-  ca_public_key_remote_path = var.ca_public_key_remote_path
-  ca_public_key_path        = var.ca_public_key_path
+  ca_public_key_pem = var.ca_public_key_pem
 }
 
 variable "node_names" {}
@@ -55,11 +53,6 @@ resource "ssh_resource" "node_init" {
   user        = "vagrant"
   private_key = "dummy value, because we use ssh-agent"
 
-  file {
-    source      = local.ca_public_key_path
-    destination = local.ca_public_key_remote_path
-  }
-
   commands = [
     <<-EOT
       #!/usr/bin/env bash
@@ -68,7 +61,9 @@ resource "ssh_resource" "node_init" {
 
       export DEBIAN_FRONTEND=noninteractive
 
-      sudo cp ${local.ca_public_key_remote_path} /usr/local/share/ca-certificates/ca.crt
+      sudo tee /usr/local/share/ca-certificates/ca.crt <<EOF
+${local.ca_public_key_pem}
+EOF
       sudo update-ca-certificates
       sudo systemctl restart docker
     EOT
