@@ -71,6 +71,17 @@ locals {
   logstash_release_name       = var.logstash_release_name
 }
 
+module "logstash_image" {
+  source = "./logstash-image"
+
+  image_registry_url = local.logstash_image_registry_url
+  image_name         = local.logstash_image_name
+}
+
+locals {
+  logstash_image_url = module.logstash_image.image_url
+}
+
 module "logstash" {
   depends_on = [module.elasticsearch]
 
@@ -78,11 +89,10 @@ module "logstash" {
 
   namespace_name     = kubernetes_namespace.elk.metadata.0.name
   storage_class_name = local.storage_class_name
-  image_registry_url = local.logstash_image_registry_url
-  image_name         = local.logstash_image_name
   service_name       = local.logstash_service_name
   service_port       = local.logstash_service_port
   release_name       = local.logstash_release_name
+  image_url          = local.logstash_image_url
 }
 
 variable "kibana_image_registry_url" {}
