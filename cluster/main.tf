@@ -43,12 +43,18 @@ provider "docker" {
 
 provider "helm" {
   kubernetes {
-    config_path = module.k8s.kubeconfig_path
+    host                   = local.k8s_host
+    cluster_ca_certificate = local.k8s_ca_crt_pem
+    client_certificate     = local.k8s_client_crt_pem
+    client_key             = local.k8s_client_key_pem
   }
 }
 
 provider "kubernetes" {
-  config_path = module.k8s.kubeconfig_path
+  host                   = local.k8s_host
+  cluster_ca_certificate = local.k8s_ca_crt_pem
+  client_certificate     = local.k8s_client_crt_pem
+  client_key             = local.k8s_client_key_pem
 }
 
 locals {
@@ -77,10 +83,9 @@ output "ca_public_key_pem" {
 }
 
 locals {
-  k8s_kubeconfig_path = abspath("${path.root}/kubeconfig.yaml")
-  k8s_cluster_name    = local.exdns_domain
-  k8s_node_names      = ["node0", "node1"]
-  k8s_node_ext_ips    = ["192.168.0.10", "192.168.0.11"]
+  k8s_cluster_name = local.exdns_domain
+  k8s_node_names   = ["node0", "node1"]
+  k8s_node_ext_ips = ["192.168.0.10", "192.168.0.11"]
   k8s_node_int_ips = [
     "192.168.255.10",
   "192.168.255.11"]
@@ -92,8 +97,7 @@ module "k8s" {
   module.ca]
   source = "./k8s"
 
-  cluster_name    = local.k8s_cluster_name
-  kubeconfig_path = local.k8s_kubeconfig_path
+  cluster_name = local.k8s_cluster_name
 
   registry_urls       = [local.dockerio_url, local.internal_registry_url]
   registry_users      = [local.dockerio_user, " "]
@@ -105,6 +109,19 @@ module "k8s" {
   node_names   = local.k8s_node_names
   node_ext_ips = local.k8s_node_ext_ips
   node_int_ips = local.k8s_node_int_ips
+}
+
+locals {
+  k8s_kubeconfig_yaml = module.k8s.kubeconfig_yaml
+  k8s_host            = module.k8s.kubeconfig_host
+  k8s_ca_crt_pem      = module.k8s.kubeconfig_ca_crt_pem
+  k8s_client_crt_pem  = module.k8s.kubeconfig_client_crt_pem
+  k8s_client_key_pem  = module.k8s.kubeconfig_client_key_pem
+}
+
+output "k8s_kubeconfig_yaml" {
+  value     = local.k8s_kubeconfig_yaml
+  sensitive = true
 }
 
 variable "metallb_chart_url" {

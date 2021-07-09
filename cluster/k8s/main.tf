@@ -41,11 +41,6 @@ locals {
   cluster_name = var.cluster_name
 }
 
-variable "kubeconfig_path" {}
-locals {
-  kubeconfig_path = var.kubeconfig_path
-}
-
 resource "ssh_resource" "node_init" {
   for_each = local.nodes
 
@@ -114,12 +109,28 @@ resource "rke_cluster" "k8s" {
   }
 }
 
-resource "local_file" "kubeconfig" {
-  sensitive_content = rke_cluster.k8s.kube_config_yaml
-  filename          = local.kubeconfig_path
-  file_permission   = "0700"
+locals {
+  kubeconfig_host           = rke_cluster.k8s.api_server_url
+  kubeconfig_ca_crt_pem     = rke_cluster.k8s.ca_crt
+  kubeconfig_client_crt_pem = rke_cluster.k8s.client_cert
+  kubeconfig_client_key_pem = rke_cluster.k8s.client_key
+  kubeconfig_yaml           = rke_cluster.k8s.kube_config_yaml
 }
 
-output "kubeconfig_path" {
-  value = local_file.kubeconfig.filename
+output "kubeconfig_host" {
+  value = local.kubeconfig_host
+}
+output "kubeconfig_ca_crt_pem" {
+  value = local.kubeconfig_ca_crt_pem
+}
+output "kubeconfig_client_crt_pem" {
+  value = local.kubeconfig_client_crt_pem
+}
+output "kubeconfig_client_key_pem" {
+  value     = local.kubeconfig_client_key_pem
+  sensitive = true
+}
+output "kubeconfig_yaml" {
+  value     = local.kubeconfig_yaml
+  sensitive = true
 }

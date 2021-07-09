@@ -180,9 +180,9 @@ when. I also only used it with `module`s (very high level).
 
 ## Can I interact with K8s?
 
-Yes, you can. On the "control" machine, under `cluster`, there is `kubeconfig.yaml` created
-when the cluster is up, and you can feed it into `kubectl` as `kubectl --kubeconfig kubeconfig.yaml`
-and talk to the cluster.
+Yes, you can. On the "control" machine, under `cluster`, run
+`kubectl --kubeconfig <( terraform output -raw k8s_kubeconfig_yaml ) get pod -A -o wide`
+or any other `kubectl` command.
 
 # Further steps towards production-grade-ing this
 
