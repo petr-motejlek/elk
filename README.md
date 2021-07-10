@@ -84,9 +84,7 @@ I also took very little care to squash the resulting Docker images by removing c
 intermediate layers. The official Dockerfile's even go as far as to compile their own `curl`, because
 that leads to a smaller image :), but that felt too much out of the scope of this exercise.
 
-Even though I used Helm for the dependencies, I specifically did not use it for the main ELK stack,
-as it was not necessary to do that for this exercise. For production, I would do that. Similarly,
-for production, I would go for a 3+-node k8s cluster. I would also keep the registry elsewhere. And
+For production, I would go for a 3+-node k8s cluster. I would also keep the registry elsewhere. And
 of course, the images for the ELK stack would be built elsewhere also.
 
 For TLS, I would probably use an Ingress resource type in Kubernetes. I did not end up using it here,
