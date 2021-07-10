@@ -31,25 +31,17 @@ resource "tls_self_signed_cert" "ca" {
   ]
 }
 
-variable "ca_public_key_path" {}
-locals {
-  ca_public_key_path = var.ca_public_key_path
-}
-
-resource "local_file" "ca" {
-  content  = tls_self_signed_cert.ca.cert_pem
-  filename = local.ca_public_key_path
-}
-
 resource "null_resource" "ca" {
   provisioner "local-exec" {
     interpreter = ["/usr/bin/env", "bash", "-xeuo", "pipefail", "-c"]
     command     = <<-EOT
       sudo openssl x509 \
-        -in ${local_file.ca.filename} \
-        -out /usr/local/share/ca-certificates/ca.crt;
-      sudo update-ca-certificates;
-      sudo systemctl restart docker;
+        -out /usr/local/share/ca-certificates/ca.crt \
+      <<EOF
+${tls_self_signed_cert.ca.cert_pem}
+EOF
+      sudo update-ca-certificates
+      sudo systemctl restart docker
     EOT
   }
 }
@@ -114,23 +106,6 @@ output "subjects_tls_crt_pems" {
   value = { for idx, cn in local.subjects_common_names : cn => tls_locally_signed_cert.subjects[idx].cert_pem }
 }
 
-output "private_key_pem" {
-  value     = tls_private_key.ca.private_key_pem
-  sensitive = true
-}
-
-output "private_key_algorithm" {
-  value = tls_private_key.ca.algorithm
-}
-
 output "public_key_pem" {
   value = tls_self_signed_cert.ca.cert_pem
-}
-
-output "public_key_hash" {
-  value = md5(local_file.ca.content)
-}
-
-output "public_key_path" {
-  value = local_file.ca.filename
 }

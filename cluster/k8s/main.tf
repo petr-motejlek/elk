@@ -19,11 +19,9 @@ locals {
   }]
 }
 
-variable "ca_public_key_path" {}
-variable "ca_public_key_remote_path" {}
+variable "ca_public_key_pem" {}
 locals {
-  ca_public_key_remote_path = var.ca_public_key_remote_path
-  ca_public_key_path        = var.ca_public_key_path
+  ca_public_key_pem = var.ca_public_key_pem
 }
 
 variable "node_names" {}
@@ -43,22 +41,12 @@ locals {
   cluster_name = var.cluster_name
 }
 
-variable "kubeconfig_path" {}
-locals {
-  kubeconfig_path = var.kubeconfig_path
-}
-
 resource "ssh_resource" "node_init" {
   for_each = local.nodes
 
   host        = each.value.ext_ip
   user        = "vagrant"
   private_key = "dummy value, because we use ssh-agent"
-
-  file {
-    source      = local.ca_public_key_path
-    destination = local.ca_public_key_remote_path
-  }
 
   commands = [
     <<-EOT
@@ -68,7 +56,9 @@ resource "ssh_resource" "node_init" {
 
       export DEBIAN_FRONTEND=noninteractive
 
-      sudo cp ${local.ca_public_key_remote_path} /usr/local/share/ca-certificates/ca.crt
+      sudo tee /usr/local/share/ca-certificates/ca.crt <<EOF
+${local.ca_public_key_pem}
+EOF
       sudo update-ca-certificates
       sudo systemctl restart docker
     EOT
@@ -119,12 +109,28 @@ resource "rke_cluster" "k8s" {
   }
 }
 
-resource "local_file" "kubeconfig" {
-  sensitive_content = rke_cluster.k8s.kube_config_yaml
-  filename          = local.kubeconfig_path
-  file_permission   = "0700"
+locals {
+  kubeconfig_host           = rke_cluster.k8s.api_server_url
+  kubeconfig_ca_crt_pem     = rke_cluster.k8s.ca_crt
+  kubeconfig_client_crt_pem = rke_cluster.k8s.client_cert
+  kubeconfig_client_key_pem = rke_cluster.k8s.client_key
+  kubeconfig_yaml           = rke_cluster.k8s.kube_config_yaml
 }
 
-output "kubeconfig_path" {
-  value = local_file.kubeconfig.filename
+output "kubeconfig_host" {
+  value = local.kubeconfig_host
+}
+output "kubeconfig_ca_crt_pem" {
+  value = local.kubeconfig_ca_crt_pem
+}
+output "kubeconfig_client_crt_pem" {
+  value = local.kubeconfig_client_crt_pem
+}
+output "kubeconfig_client_key_pem" {
+  value     = local.kubeconfig_client_key_pem
+  sensitive = true
+}
+output "kubeconfig_yaml" {
+  value     = local.kubeconfig_yaml
+  sensitive = true
 }

@@ -7,7 +7,7 @@ locals {
 
 locals {
   docker_context_path     = abspath("${path.module}/docker")
-  docker_context_zip_path = "${local.docker_context_path}.zip"
+  docker_context_zip_path = "${path.root}/.terraform/${path.module}/docker.zip"
 }
 
 data "archive_file" "context" {
@@ -17,7 +17,7 @@ data "archive_file" "context" {
 }
 
 resource "docker_image" "elasticsearch" {
-  name = "${local.image_registry_url}/${local.image_name}:${data.archive_file.context.output_md5}"
+  name = "${local.image_registry_url}/${local.image_name}"
 
   build {
     path = local.docker_context_path
