@@ -11,7 +11,9 @@
 {{- end -}}
 
 {{- define "initialMasterNodes" -}}
-    elasticsearch-0,elasticsearch-1,elasticsearch-2
+    {{- if .Release.IsInstall -}}
+        elasticsearch-0,elasticsearch-1,elasticsearch-2
+    {{- end -}}
 {{- end -}}
 
 {{- define "imageUrl" -}}
