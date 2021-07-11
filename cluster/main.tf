@@ -235,6 +235,7 @@ variable "elasticsearch_replicas_count" {
 }
 locals {
   elk_namespace_name     = "elk"
+  elk_release_name       = "elk"
   elk_storage_class_name = module.longhorn.storage_class_name
 
   elasticsearch_image_name     = "elasticsearch"
@@ -260,6 +261,7 @@ module "elk" {
   source = "./elk"
 
   namespace_name     = local.elk_namespace_name
+  release_name       = local.elk_release_name
   storage_class_name = local.elk_storage_class_name
 
   elasticsearch_image_registry_url = local.internal_registry_url
@@ -267,17 +269,14 @@ module "elk" {
   elasticsearch_service_name       = local.elasticsearch_service_name
   elasticsearch_service_port       = local.elasticsearch_service_port
   elasticsearch_replicas_count     = local.elasticsearch_replicas_count
-  elasticsearch_release_name       = local.elasticsearch_release_name
 
   logstash_image_registry_url = local.internal_registry_url
   logstash_image_name         = local.logstash_image_name
   logstash_service_name       = local.logstash_service_name
   logstash_service_port       = local.logstash_service_port
-  logstash_release_name       = local.logstash_release_name
 
   kibana_image_registry_url = local.internal_registry_url
   kibana_image_name         = local.kibana_image_name
   kibana_service_name       = local.kibana_service_name
   kibana_service_port       = local.kibana_service_port
-  kibana_release_name       = local.kibana_release_name
 }
